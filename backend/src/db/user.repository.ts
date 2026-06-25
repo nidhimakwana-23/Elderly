@@ -1,5 +1,7 @@
 import type { User } from '../auth/auth.types.js';
 
+import type { FamilyProfile } from '../family/family.types.js';
+
 /**
  * IUserRepository — the contract for all user storage implementations.
  *
@@ -14,4 +16,10 @@ export interface IUserRepository {
 
   /** Persist a new user record and return it. */
   create(user: User): Promise<User>;
+
+  /** Persist a new family profile. */
+  createFamilyProfile(profile: FamilyProfile): Promise<FamilyProfile>;
+
+  /** Get all family profiles linked to a given user ID. */
+  getFamilyProfilesByUserId(linkedToUserId: string): Promise<FamilyProfile[]>;
 }

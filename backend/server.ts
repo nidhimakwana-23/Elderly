@@ -35,11 +35,41 @@ app.get('/api', (_req: Request, res: Response) => {
 app.use('/api/auth', createAuthRouter(authController));
 app.use('/api/family', createFamilyRouter(familyController));
 
-// ─── Docs ─────────────────────────────────────────────────────────────────────
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const openapiSpec = JSON.parse(fs.readFileSync(path.join(__dirname, 'openapi.json'), 'utf8'));
+import swaggerJsdoc from 'swagger-jsdoc';
 
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Elderly API',
+      version: '1.0.0',
+      description: 'API documentation for the Elderly project',
+    },
+    servers: [
+      {
+        url: 'http://localhost:3001',
+        description: 'Local server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+  },
+  apis: ['./src/**/*.ts'],
+};
+
+const openapiSpec = swaggerJsdoc(swaggerOptions);
+
+app.get('/openapi.json', (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(openapiSpec);
+});
 app.use(
   '/reference',
   apiReference({
@@ -49,13 +79,6 @@ app.use(
     },
   })
 );
-
-// pAchi jo aa bi ek route che ^ /reference  -- aa route ma pelu UI btave, ek vaar check kari jojow ow how  
-
-// Areee hu nato brwoser ma me type karyu hatu localhost:3001/reference, evu aree ane copy kar, aa route check kar em brwoser ma 
-// avu ny? maru jo baaju maj tab che  ema url check kar, ej url ah ej lakhyu chhe bwo  
-// JO me kayu url lakhyu hatu ..bsssssssss  haa pachi aakhu try kar, login signup bdhu :) tare agad batavanu bi che to tne to khbr hovi joie ne :)
-// Ruk jo akhu ek var kari ne batavu chu, aa time dhyan aapje :)
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(port, () => {

@@ -11,7 +11,11 @@ import { createAuthRouter } from './src/auth/auth.router.js';
 import { FamilyService } from './src/family/family.service.js';
 import { FamilyController } from './src/family/family.controller.js';
 import { createFamilyRouter } from './src/family/family.router.js';
-
+import { medicineRouter } from './src/medicine/medicine.router.js';
+import { MemoryMedicineLogsRepository } from './src/db/memory/memory.medicine-logs.repository.js';
+import { MedicineLogsService } from './src/medicine-logs/medicine-logs.service.js';
+import { MedicineLogsController } from './src/medicine-logs/medicine-logs.controller.js';
+import { createMedicineLogsRouter, createMedicineReportRouter } from './src/medicine-logs/medicine-logs.router.js';
 const app = express();
 const port = process.env['PORT'] ?? 3001;
 
@@ -26,6 +30,9 @@ const authService = new AuthService(userRepository);
 const authController = new AuthController(authService);
 const familyService = new FamilyService(userRepository);
 const familyController = new FamilyController(familyService);
+const medicineLogsRepository = new MemoryMedicineLogsRepository();
+const medicineLogsService = new MedicineLogsService(medicineLogsRepository);
+const medicineLogsController = new MedicineLogsController(medicineLogsService);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api', (_req: Request, res: Response) => {
@@ -34,6 +41,9 @@ app.get('/api', (_req: Request, res: Response) => {
 
 app.use('/api/auth', createAuthRouter(authController));
 app.use('/api/family', createFamilyRouter(familyController));
+app.use('/api/medicines', medicineRouter);
+app.use('/api/medicine-logs', createMedicineLogsRouter(medicineLogsController));
+app.use('/api/medicine-report', createMedicineReportRouter(medicineLogsController));
 
 import swaggerJsdoc from 'swagger-jsdoc';
 

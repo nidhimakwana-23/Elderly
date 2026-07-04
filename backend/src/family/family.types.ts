@@ -8,9 +8,13 @@ export interface FamilyProfile {
 
 export interface CreateFamilyProfileInput {
   fullName: string;
-  birthdate: string;
+  birthDate: string;
   email: string;
   password?: string;
-  medicalCondition: string;
-  emergencyContacts: string[];
+  medicalConditions: string[];
+  emergencyContacts: {
+    name: string;
+    phone: string;
+    relation: string;
+  }[];
 }

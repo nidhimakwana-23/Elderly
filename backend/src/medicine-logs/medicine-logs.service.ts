@@ -38,7 +38,9 @@ export class MedicineLogsService {
     if (status === 'Taken') {
       updateData.takenTime = takenTime || new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
     } else if (status === 'Skipped') {
-      updateData.skippedReason = skippedReason;
+      if (skippedReason !== undefined) {
+        updateData.skippedReason = skippedReason;
+      }
     }
 
     const updated = await this.medicineLogsRepository.update(id, updateData);

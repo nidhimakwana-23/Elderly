@@ -3,7 +3,7 @@ import type { CreateHealthCheckDto, HealthCheck, UpdateHealthCheckDto } from './
 import { randomUUID } from 'node:crypto';
 
 export class HealthCheckService {
-  constructor(private readonly repo: IHealthCheckRepository) {}
+  constructor(private readonly repo: IHealthCheckRepository) { }
 
   async createHealthCheck(dto: CreateHealthCheckDto): Promise<HealthCheck> {
     const healthCheck: HealthCheck = {
@@ -24,11 +24,7 @@ export class HealthCheckService {
   }
 
   async updateHealthCheck(id: string, dto: UpdateHealthCheckDto): Promise<HealthCheck | undefined> {
-    const updates = {
-      ...dto,
-      updated_at: new Date().toISOString(),
-    };
-    return this.repo.update(id, updates);
+    return this.repo.update(id, dto as Partial<HealthCheck>);
   }
 
   async deleteHealthCheck(id: string): Promise<boolean> {

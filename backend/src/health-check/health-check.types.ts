@@ -27,4 +27,4 @@ export type CreateHealthCheckDto = z.infer<typeof CreateHealthCheckDtoSchema>;
 
 export const UpdateHealthCheckDtoSchema = CreateHealthCheckDtoSchema.partial();
 
-export type UpdateHealthCheckDto = Partial<CreateHealthCheckDto>;
+export type UpdateHealthCheckDto = z.infer<typeof UpdateHealthCheckDtoSchema>;

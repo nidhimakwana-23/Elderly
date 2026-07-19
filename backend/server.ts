@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { MedicineSchema, CreateMedicineDtoSchema, UpdateMedicineDtoSchema } from './src/medicine/medicine.types.js';
 import { FamilyProfileSchema, CreateFamilyProfileInputSchema } from './src/family/family.types.js';
 import { UserSchema, SignupInputSchema, LoginInputSchema, JwtPayloadSchema } from './src/auth/auth.types.js';
+import { HealthCheckSchema, CreateHealthCheckDtoSchema, UpdateHealthCheckDtoSchema } from './src/health-check/health-check.types.js';
 
 // ─── DB Connection ────────────────────────────────────────────────────────────
 import { connectDB } from './src/db/mongoose/connection.js';
@@ -17,24 +18,28 @@ import { connectDB } from './src/db/mongoose/connection.js';
 import { MongooseUserRepository } from './src/db/mongoose/mongoose.user.repository.js';
 import { MongooseMedicineRepository } from './src/db/mongoose/mongoose.medicine.repository.js';
 import { MongooseMedicineLogsRepository } from './src/db/mongoose/mongoose.medicine-logs.repository.js';
+import { MongooseHealthCheckRepository } from './src/db/mongoose/mongoose.health-check.repository.js';
 
 // ─── Services ─────────────────────────────────────────────────────────────────
 import { AuthService } from './src/auth/auth.service.js';
 import { FamilyService } from './src/family/family.service.js';
 import { MedicineService } from './src/medicine/medicine.service.js';
 import { MedicineLogsService } from './src/medicine-logs/medicine-logs.service.js';
+import { HealthCheckService } from './src/health-check/health-check.service.js';
 
 // ─── Controllers ──────────────────────────────────────────────────────────────
 import { AuthController } from './src/auth/auth.controller.js';
 import { FamilyController } from './src/family/family.controller.js';
 import { MedicineController } from './src/medicine/medicine.controller.js';
 import { MedicineLogsController } from './src/medicine-logs/medicine-logs.controller.js';
+import { HealthCheckController } from './src/health-check/health-check.controller.js';
 
 // ─── Routers ──────────────────────────────────────────────────────────────────
 import { createAuthRouter } from './src/auth/auth.router.js';
 import { createFamilyRouter } from './src/family/family.router.js';
 import { createMedicineRouter } from './src/medicine/medicine.router.js';
 import { createMedicineLogsRouter, createMedicineReportRouter } from './src/medicine-logs/medicine-logs.router.js';
+import { createHealthCheckRouter } from './src/health-check/health-check.router.js';
 
 const app = express();
 const port = process.env['PORT'] ?? 3001;
@@ -48,16 +53,19 @@ app.use(express.json());
 const userRepository          = new MongooseUserRepository();
 const medicineRepository      = new MongooseMedicineRepository();
 const medicineLogsRepository  = new MongooseMedicineLogsRepository();
+const healthCheckRepository   = new MongooseHealthCheckRepository();
 
 const authService             = new AuthService(userRepository);
 const familyService           = new FamilyService(userRepository);
 const medicineService         = new MedicineService(medicineRepository);
 const medicineLogsService     = new MedicineLogsService(medicineLogsRepository);
+const healthCheckService      = new HealthCheckService(healthCheckRepository);
 
 const authController          = new AuthController(authService);
 const familyController        = new FamilyController(familyService);
 const medicineController      = new MedicineController(medicineService);
 const medicineLogsController  = new MedicineLogsController(medicineLogsService);
+const healthCheckController   = new HealthCheckController(healthCheckService);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api', (_req: Request, res: Response) => {
@@ -69,6 +77,7 @@ app.use('/api/family',          createFamilyRouter(familyController));
 app.use('/api/medicines',       createMedicineRouter(medicineController));
 app.use('/api/medicine-logs',   createMedicineLogsRouter(medicineLogsController));
 app.use('/api/medicine-report', createMedicineReportRouter(medicineLogsController));
+app.use('/api/health-checks',   createHealthCheckRouter(healthCheckController));
 
 // ─── OpenAPI / Scalar ─────────────────────────────────────────────────────────
 const swaggerOptions = {
@@ -103,6 +112,9 @@ const swaggerOptions = {
         SignupInput: z.toJSONSchema(SignupInputSchema, { target: 'openapi-3.0' }),
         LoginInput: z.toJSONSchema(LoginInputSchema, { target: 'openapi-3.0' }),
         JwtPayload: z.toJSONSchema(JwtPayloadSchema, { target: 'openapi-3.0' }),
+        HealthCheck: z.toJSONSchema(HealthCheckSchema, { target: 'openapi-3.0' }),
+        CreateHealthCheckDto: z.toJSONSchema(CreateHealthCheckDtoSchema, { target: 'openapi-3.0' }),
+        UpdateHealthCheckDto: z.toJSONSchema(UpdateHealthCheckDtoSchema, { target: 'openapi-3.0' }),
       },
     },
   },

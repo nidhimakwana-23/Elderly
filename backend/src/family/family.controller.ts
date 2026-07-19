@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { FamilyService, ValidationError, ConflictError } from './family.service.js';
 
 export class FamilyController {
-  constructor(private readonly familyService: FamilyService) {}
+  constructor(private readonly familyService: FamilyService) { }
 
   createProfile = async (req: Request, res: Response): Promise<void> => {
     try {

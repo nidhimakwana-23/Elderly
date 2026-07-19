@@ -19,25 +19,7 @@ export function createAuthRouter(controller: AuthController): Router {
    *       content:
    *         application/json:
    *           schema:
-   *             type: object
-   *             properties:
-   *               fullName:
-   *                 type: string
-   *                 example: John Doe
-   *               birthdate:
-   *                 type: string
-   *                 example: 1990-01-01
-   *               email:
-   *                 type: string
-   *                 example: john@example.com
-   *               password:
-   *                 type: string
-   *                 example: password123
-   *             required:
-   *               - fullName
-   *               - birthdate
-   *               - email
-   *               - password
+   *             $ref: '#/components/schemas/SignupInput'
    *     responses:
    *       201:
    *         description: User registered successfully
@@ -58,17 +40,7 @@ export function createAuthRouter(controller: AuthController): Router {
    *       content:
    *         application/json:
    *           schema:
-   *             type: object
-   *             properties:
-   *               email:
-   *                 type: string
-   *                 example: john@example.com
-   *               password:
-   *                 type: string
-   *                 example: password123
-   *             required:
-   *               - email
-   *               - password
+   *             $ref: '#/components/schemas/LoginInput'
    *     responses:
    *       200:
    *         description: Login successful

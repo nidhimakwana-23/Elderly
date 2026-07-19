@@ -15,9 +15,19 @@ export function createMedicineRouter(medicineController: MedicineController): Ro
    *     summary: Create a new medicine
    *     security:
    *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateMedicineDto'
    *     responses:
    *       201:
    *         description: Medicine created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Medicine'
    *       401:
    *         description: Unauthorized
    */
@@ -33,6 +43,12 @@ export function createMedicineRouter(medicineController: MedicineController): Ro
    *     responses:
    *       200:
    *         description: List of medicines
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Medicine'
    *       401:
    *         description: Unauthorized
    */
@@ -54,6 +70,10 @@ export function createMedicineRouter(medicineController: MedicineController): Ro
    *     responses:
    *       200:
    *         description: Medicine details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Medicine'
    *       404:
    *         description: Not found
    */
@@ -72,9 +92,19 @@ export function createMedicineRouter(medicineController: MedicineController): Ro
    *         required: true
    *         schema:
    *           type: string
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/UpdateMedicineDto'
    *     responses:
    *       200:
    *         description: Medicine updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Medicine'
    *       404:
    *         description: Not found
    */

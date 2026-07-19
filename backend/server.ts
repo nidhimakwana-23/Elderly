@@ -5,6 +5,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { apiReference } from '@scalar/express-api-reference';
 import swaggerJsdoc from 'swagger-jsdoc';
+import { z } from 'zod';
+import { MedicineSchema, CreateMedicineDtoSchema, UpdateMedicineDtoSchema } from './src/medicine/medicine.types.js';
+import { FamilyProfileSchema, CreateFamilyProfileInputSchema } from './src/family/family.types.js';
+import { UserSchema, SignupInputSchema, LoginInputSchema, JwtPayloadSchema } from './src/auth/auth.types.js';
 
 // ─── DB Connection ────────────────────────────────────────────────────────────
 import { connectDB } from './src/db/mongoose/connection.js';
@@ -88,6 +92,17 @@ const swaggerOptions = {
           scheme: 'bearer',
           bearerFormat: 'JWT',
         },
+      },
+      schemas: {
+        Medicine: z.toJSONSchema(MedicineSchema, { target: 'openapi-3.0' }),
+        CreateMedicineDto: z.toJSONSchema(CreateMedicineDtoSchema, { target: 'openapi-3.0' }),
+        UpdateMedicineDto: z.toJSONSchema(UpdateMedicineDtoSchema, { target: 'openapi-3.0' }),
+        FamilyProfile: z.toJSONSchema(FamilyProfileSchema, { target: 'openapi-3.0' }),
+        CreateFamilyProfileInput: z.toJSONSchema(CreateFamilyProfileInputSchema, { target: 'openapi-3.0' }),
+        User: z.toJSONSchema(UserSchema, { target: 'openapi-3.0' }),
+        SignupInput: z.toJSONSchema(SignupInputSchema, { target: 'openapi-3.0' }),
+        LoginInput: z.toJSONSchema(LoginInputSchema, { target: 'openapi-3.0' }),
+        JwtPayload: z.toJSONSchema(JwtPayloadSchema, { target: 'openapi-3.0' }),
       },
     },
   },

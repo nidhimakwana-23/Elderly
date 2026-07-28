@@ -29,7 +29,7 @@ function validateBirthdate(birthdate: string): boolean {
 }
 
 export class FamilyService {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(private readonly userRepository: IUserRepository) { }
 
   async createFamilyProfile(
     input: CreateFamilyProfileInput,
@@ -56,7 +56,7 @@ export class FamilyService {
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    
+
     // Create the User record so they can log in
     const newUser = await this.userRepository.create({
       id: randomUUID(),

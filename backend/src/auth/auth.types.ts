@@ -6,6 +6,7 @@ export interface User {
   email: string;
   passwordHash: string;
   createdAt: string; // ISO 8601 datetime string
+  role?: 'normal' | 'family';
 }
 
 // ─── API input shapes ─────────────────────────────────────────────────────────

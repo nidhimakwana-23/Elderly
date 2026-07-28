@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, type Response } from 'express';
+import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -63,11 +64,15 @@ import { createAppointmentRouter } from './src/appointment/appointment.router.js
 import { createEmergencyRouter } from './src/emergency/emergency.router.js';
 import { createPrescriptionRouter } from './src/prescription/prescription.router.js';
 import { createHealthTrendRouter } from './src/health-trend/health-trend.router.js';
+import { AiService } from './src/ai/ai.service.js';
+import { AiController } from './src/ai/ai.controller.js';
+import { createAiRouter } from './src/ai/ai.router.js';
 
 const app = express();
 const port = process.env['PORT'] ?? 3001;
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }));
 app.use(express.json());
 
 // ─── Dependency wiring ────────────────────────────────────────────────────────
@@ -98,6 +103,7 @@ const healthTrendService      = new HealthTrendService(
   prescriptionRepository,
   appointmentRepository,
 );
+const aiService               = new AiService(healthCheckService, medicineLogsService, medicineService);
 
 const authController          = new AuthController(authService);
 const familyController        = new FamilyController(familyService);
@@ -109,6 +115,7 @@ const appointmentController   = new AppointmentController(appointmentService, do
 const emergencyController     = new EmergencyController(emergencyService, doctorService);
 const prescriptionController  = new PrescriptionController(prescriptionService);
 const healthTrendController   = new HealthTrendController(healthTrendService);
+const aiController            = new AiController(aiService);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api', (_req: Request, res: Response) => {
@@ -126,6 +133,7 @@ app.use('/api/appointments',    createAppointmentRouter(appointmentController));
 app.use('/api/emergency',       createEmergencyRouter(emergencyController));
 app.use('/api/prescriptions',   createPrescriptionRouter(prescriptionController));
 app.use('/api/health-trend',    createHealthTrendRouter(healthTrendController));
+app.use('/api/ai',              createAiRouter(aiController));
 
 // ─── OpenAPI / Scalar ─────────────────────────────────────────────────────────
 const swaggerOptions = {

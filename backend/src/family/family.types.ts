@@ -23,7 +23,6 @@ export const CreateFamilyProfileInputSchema = z.object({
       relation: z.string(),
     })
   ),
-  nickname: z.string().optional(),
 });
 
 export type CreateFamilyProfileInput = z.infer<typeof CreateFamilyProfileInputSchema>;

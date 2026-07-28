@@ -35,7 +35,7 @@ export class FamilyService {
     input: CreateFamilyProfileInput,
     linkedToUserId: string
   ): Promise<{ profile: FamilyProfile; userId: string }> {
-    const { fullName, birthdate, email, password, medicalCondition, emergencyContacts } = input;
+    const { fullName, birthDate, email, password, medicalConditions, emergencyContacts } = input;
 
     if (!fullName?.trim()) {
       throw new ValidationError('Full name is required.');
@@ -43,7 +43,7 @@ export class FamilyService {
     if (!email?.trim() || !validateEmail(email)) {
       throw new ValidationError('A valid email address is required.');
     }
-    if (!birthdate?.trim() || !validateBirthdate(birthdate)) {
+    if (!birthDate?.trim() || !validateBirthdate(birthDate)) {
       throw new ValidationError('A valid birthdate (YYYY-MM-DD) is required.');
     }
     if (!password || password.length < 8) {
@@ -61,7 +61,7 @@ export class FamilyService {
     const newUser = await this.userRepository.create({
       id: randomUUID(),
       fullName: fullName.trim(),
-      birthdate,
+      birthdate: birthDate,
       email: email.toLowerCase().trim(),
       passwordHash,
       createdAt: new Date().toISOString(),
@@ -74,8 +74,8 @@ export class FamilyService {
       id: profileId,
       userId: newUser.id,
       linkedToUserId,
-      medicalCondition: medicalCondition || '',
-      emergencyContacts: Array.isArray(emergencyContacts) ? emergencyContacts : [],
+      medicalCondition: medicalConditions?.join(', ') || '',
+      emergencyContacts: emergencyContacts?.map(c => `${c.name} - ${c.relation} (${c.phone})`) || [],
     });
 
     return { profile: newProfile, userId: newUser.id };

@@ -20,33 +20,19 @@ export function createFamilyRouter(controller: FamilyController): Router {
    *       content:
    *         application/json:
    *           schema:
-   *             type: object
-   *             properties:
-   *               fullName:
-   *                 type: string
-   *               dob:
-   *                 type: string
-   *               medicalConditions:
-   *                 type: array
-   *                 items:
-   *                   type: string
-   *               emergencyContacts:
-   *                 type: array
-   *                 items:
-   *                   type: object
-   *                   properties:
-   *                     name:
-   *                       type: string
-   *                     phone:
-   *                       type: string
-   *                     relation:
-   *                       type: string
-   *             required:
-   *               - fullName
-   *               - dob
+   *             $ref: '#/components/schemas/CreateFamilyProfileInput'
    *     responses:
    *       201:
    *         description: Profile created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 profile:
+   *                   $ref: '#/components/schemas/FamilyProfile'
    *       401:
    *         description: Unauthorized
    */
@@ -62,6 +48,15 @@ export function createFamilyRouter(controller: FamilyController): Router {
    *     responses:
    *       200:
    *         description: A list of elderly profiles
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 profiles:
+   *                   type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/FamilyProfile'
    *       401:
    *         description: Unauthorized
    */

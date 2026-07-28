@@ -2,9 +2,7 @@ import mongoose, { Schema, type Document } from 'mongoose';
 import type { HealthCheck } from '../../health-check/health-check.types.js';
 
 // Define the interface for the Document
-export interface IHealthCheckDocument extends Omit<HealthCheck, 'id'>, Document {
-  _id: string; // Ensure _id is treated as a string since we provide UUIDs
-}
+export interface IHealthCheckDocument extends Omit<HealthCheck, 'id'>, Document<string> {}
 
 // Create the Mongoose Schema
 const HealthCheckSchema = new Schema<IHealthCheckDocument>(

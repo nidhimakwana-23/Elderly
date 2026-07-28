@@ -18,8 +18,9 @@ const UserSchema = new Schema(
     birthdate:    { type: String, required: true },
     email:        { type: String, required: true, unique: true, index: true },
     passwordHash: { type: String, required: true },
+    phone:        { type: String },
     createdAt:    { type: String, required: true },
-    role:         { type: String, enum: ['normal', 'family'], default: 'normal' },
+    role:         { type: String, enum: ['normal', 'family', 'doctor'], default: 'normal' },
   },
   {
     // Disable Mongoose's own timestamps — the service layer sets createdAt.

@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
 import type { IUserRepository } from '../db/user.repository.js';
-import type { LoginInput, SignupInput } from './auth.types.js';
+import type { LoginInput, SignupInput, DoctorSignupInput } from './auth.types.js';
 
 // Number of salt rounds for bcrypt — higher is more secure but slower.
 // 10 is the standard for most applications.
@@ -42,12 +42,10 @@ function getJwtSecret(): string {
   return secret;
 }
 
-function issueToken(userId: string, email: string): string {
+function issueToken(userId: string, email: string, role?: string): string {
   const expiresIn = process.env['JWT_EXPIRES_IN'] ?? '7d';
-  // Cast needed because env vars are plain strings but jsonwebtoken's type
-  // expects the branded StringValue type. The runtime value is identical.
   const options: SignOptions = { expiresIn: expiresIn as SignOptions['expiresIn'] & string };
-  return jwt.sign({ sub: userId, email }, getJwtSecret(), options);
+  return jwt.sign({ sub: userId, email, role }, getJwtSecret(), options);
 }
 
 // ─── Validation helpers ───────────────────────────────────────────────────────
@@ -105,7 +103,7 @@ export class AuthService {
     });
 
     // 4. Issue JWT
-    const token = issueToken(newUser.id, newUser.email);
+    const token = issueToken(newUser.id, newUser.email, newUser.role ?? 'normal');
     return { token };
   }
 
@@ -134,7 +132,36 @@ export class AuthService {
     }
 
     // 4. Issue JWT
-    const token = issueToken(user.id, user.email);
+    const token = issueToken(user.id, user.email, user.role ?? 'normal');
     return { token };
+  }
+
+  // ─── Doctor signup ────────────────────────────────────────────────────────────
+  async doctorSignup(input: DoctorSignupInput): Promise<{ token: string; userId: string }> {
+    const { fullName, birthdate, email, password, phone } = input;
+
+    if (!fullName?.trim()) throw new ValidationError('Full name is required.');
+    if (!email?.trim() || !validateEmail(email)) throw new ValidationError('A valid email address is required.');
+    if (!birthdate?.trim() || !validateBirthdate(birthdate)) throw new ValidationError('A valid birthdate (YYYY-MM-DD) is required.');
+    if (!password || password.length < 8) throw new ValidationError('Password must be at least 8 characters.');
+    if (!phone?.trim()) throw new ValidationError('Phone number is required for doctor registration.');
+
+    const existing = await this.userRepository.findByEmail(email);
+    if (existing) throw new ConflictError('An account with this email already exists.');
+
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    const newUser = await this.userRepository.create({
+      id: randomUUID(),
+      fullName: fullName.trim(),
+      birthdate,
+      email: email.toLowerCase().trim(),
+      passwordHash,
+      phone: phone.trim(),
+      createdAt: new Date().toISOString(),
+      role: 'doctor',
+    });
+
+    const token = issueToken(newUser.id, newUser.email, 'doctor');
+    return { token, userId: newUser.id };
   }
 }

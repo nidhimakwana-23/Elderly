@@ -51,5 +51,26 @@ export function createAuthRouter(controller: AuthController): Router {
    */
   router.post('/login', controller.login);
 
+  /**
+   * @openapi
+   * /api/auth/doctor/signup:
+   *   post:
+   *     summary: Register a new doctor account
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/DoctorSignupInput'
+   *     responses:
+   *       201:
+   *         description: Doctor registered successfully
+   *       400:
+   *         description: Validation Error
+   *       409:
+   *         description: Conflict Error
+   */
+  router.post('/doctor/signup', controller.doctorSignup);
+
   return router;
 }

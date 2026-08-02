@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "nodemon --exec ts-node --esm server.ts",
+    "generate:openapi": "node --input-type=module --loader ts-node/esm -e \"import dc from 'node:diagnostics_channel'; if (!dc.tracingChannel) dc.tracingChannel = () => ({}); const { openapiSpec } = await import('./src/openapi.js'); const fs = await import('node:fs'); fs.writeFileSync('./openapi.json', JSON.stringify(openapiSpec, null, 2));\"",
+    "generate:client": "npm run generate:openapi && npx @openapitools/openapi-generator-cli generate -i ./openapi.json -g typescript-fetch -o ./src/generated-client",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -25,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@openapitools/openapi-generator-cli": "^2.40.1",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -41,6 +44,7 @@
     "typescript-eslint": "^8.61.1"
   },
   "overrides": {
-    "lru-cache": "^10.4.3"
+    "proxy-agent": "6.3.0",
+    "concurrently": "8.2.2"
   }
 }

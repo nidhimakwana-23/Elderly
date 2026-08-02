@@ -18,6 +18,1334 @@
         "scheme": "bearer",
         "bearerFormat": "JWT"
       }
+    },
+    "schemas": {
+      "Medicine": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "patient_id": {
+            "type": "string"
+          },
+          "medicine_name": {
+            "type": "string"
+          },
+          "medicine_type": {
+            "type": "string",
+            "enum": [
+              "Tablet",
+              "Capsule",
+              "Syrup",
+              "Injection",
+              "Drops",
+              "Cream",
+              "Other"
+            ]
+          },
+          "dosage": {
+            "type": "string"
+          },
+          "strength": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "Once Daily",
+              "Twice Daily",
+              "Three Times Daily",
+              "Four Times Daily",
+              "Every 6 Hours",
+              "Weekly",
+              "Custom"
+            ]
+          },
+          "timing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "end_date": {
+            "type": "string"
+          },
+          "reminder_enabled": {
+            "type": "boolean"
+          },
+          "reminder_times": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "doctor_name": {
+            "type": "string"
+          },
+          "prescription_number": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Completed",
+              "Upcoming",
+              "Expired"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "medicine_name",
+          "medicine_type",
+          "dosage",
+          "frequency",
+          "timing",
+          "start_date",
+          "reminder_enabled",
+          "reminder_times",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "CreateMedicineDto": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "medicine_name": {
+            "type": "string"
+          },
+          "medicine_type": {
+            "type": "string",
+            "enum": [
+              "Tablet",
+              "Capsule",
+              "Syrup",
+              "Injection",
+              "Drops",
+              "Cream",
+              "Other"
+            ]
+          },
+          "dosage": {
+            "type": "string"
+          },
+          "strength": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "Once Daily",
+              "Twice Daily",
+              "Three Times Daily",
+              "Four Times Daily",
+              "Every 6 Hours",
+              "Weekly",
+              "Custom"
+            ]
+          },
+          "timing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "end_date": {
+            "type": "string"
+          },
+          "reminder_enabled": {
+            "type": "boolean"
+          },
+          "reminder_times": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "doctor_name": {
+            "type": "string"
+          },
+          "prescription_number": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Completed",
+              "Upcoming",
+              "Expired"
+            ]
+          }
+        },
+        "required": [
+          "patient_id",
+          "medicine_name",
+          "medicine_type",
+          "dosage",
+          "frequency",
+          "timing",
+          "start_date",
+          "reminder_enabled",
+          "reminder_times",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateMedicineDto": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "medicine_name": {
+            "type": "string"
+          },
+          "medicine_type": {
+            "type": "string",
+            "enum": [
+              "Tablet",
+              "Capsule",
+              "Syrup",
+              "Injection",
+              "Drops",
+              "Cream",
+              "Other"
+            ]
+          },
+          "dosage": {
+            "type": "string"
+          },
+          "strength": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "Once Daily",
+              "Twice Daily",
+              "Three Times Daily",
+              "Four Times Daily",
+              "Every 6 Hours",
+              "Weekly",
+              "Custom"
+            ]
+          },
+          "timing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "end_date": {
+            "type": "string"
+          },
+          "reminder_enabled": {
+            "type": "boolean"
+          },
+          "reminder_times": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "doctor_name": {
+            "type": "string"
+          },
+          "prescription_number": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Completed",
+              "Upcoming",
+              "Expired"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "FamilyProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "linkedToUserId": {
+            "type": "string"
+          },
+          "medicalCondition": {
+            "type": "string"
+          },
+          "emergencyContacts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "linkedToUserId",
+          "medicalCondition",
+          "emergencyContacts"
+        ],
+        "additionalProperties": false
+      },
+      "CreateFamilyProfileInput": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "birthDate": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "medicalConditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "emergencyContacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "relation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "phone",
+                "relation"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "fullName",
+          "birthDate",
+          "email",
+          "medicalConditions",
+          "emergencyContacts"
+        ],
+        "additionalProperties": false
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "birthdate": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "passwordHash": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "family",
+              "doctor"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "birthdate",
+          "email",
+          "passwordHash",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "SignupInput": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "birthdate": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName",
+          "birthdate",
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "LoginInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "additionalProperties": false
+      },
+      "JwtPayload": {
+        "type": "object",
+        "properties": {
+          "sub": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "family",
+              "doctor"
+            ]
+          }
+        },
+        "required": [
+          "sub",
+          "email"
+        ],
+        "additionalProperties": false
+      },
+      "HealthCheck": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "patient_id": {
+            "type": "string"
+          },
+          "recorded_by_id": {
+            "type": "string"
+          },
+          "sugar_level": {
+            "type": "number"
+          },
+          "weight": {
+            "type": "number"
+          },
+          "blood_pressure": {
+            "type": "string"
+          },
+          "blood_level": {
+            "type": "string"
+          },
+          "bmi": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "date",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "CreateHealthCheckDto": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "recorded_by_id": {
+            "type": "string"
+          },
+          "sugar_level": {
+            "type": "number"
+          },
+          "weight": {
+            "type": "number"
+          },
+          "blood_pressure": {
+            "type": "string"
+          },
+          "blood_level": {
+            "type": "string"
+          },
+          "bmi": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id",
+          "date"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateHealthCheckDto": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "recorded_by_id": {
+            "type": "string"
+          },
+          "sugar_level": {
+            "type": "number"
+          },
+          "weight": {
+            "type": "number"
+          },
+          "blood_pressure": {
+            "type": "string"
+          },
+          "blood_level": {
+            "type": "string"
+          },
+          "bmi": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DoctorProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "specialization": {
+            "type": "string"
+          },
+          "license_number": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Point"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ],
+            "additionalProperties": false
+          },
+          "availability": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "day_of_week": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                },
+                "start_time": {
+                  "type": "string"
+                },
+                "end_time": {
+                  "type": "string"
+                },
+                "is_booked": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "day_of_week",
+                "start_time",
+                "end_time",
+                "is_booked"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "is_available_for_emergency": {
+            "default": false,
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "specialization",
+          "license_number",
+          "phone",
+          "location",
+          "availability",
+          "is_available_for_emergency",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "CreateDoctorProfileDto": {
+        "type": "object",
+        "properties": {
+          "specialization": {
+            "type": "string"
+          },
+          "license_number": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Point"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ],
+            "additionalProperties": false
+          },
+          "availability": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "day_of_week": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                },
+                "start_time": {
+                  "type": "string"
+                },
+                "end_time": {
+                  "type": "string"
+                },
+                "is_booked": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "day_of_week",
+                "start_time",
+                "end_time",
+                "is_booked"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "is_available_for_emergency": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "specialization",
+          "license_number",
+          "phone",
+          "location",
+          "availability",
+          "is_available_for_emergency"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateDoctorProfileDto": {
+        "type": "object",
+        "properties": {
+          "specialization": {
+            "type": "string"
+          },
+          "license_number": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Point"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ],
+            "additionalProperties": false
+          },
+          "availability": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "day_of_week": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                },
+                "start_time": {
+                  "type": "string"
+                },
+                "end_time": {
+                  "type": "string"
+                },
+                "is_booked": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "day_of_week",
+                "start_time",
+                "end_time",
+                "is_booked"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "is_available_for_emergency": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "availability": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "day_of_week": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                },
+                "start_time": {
+                  "type": "string"
+                },
+                "end_time": {
+                  "type": "string"
+                },
+                "is_booked": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "day_of_week",
+                "start_time",
+                "end_time",
+                "is_booked"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "availability"
+        ],
+        "additionalProperties": false
+      },
+      "Appointment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "patient_id": {
+            "type": "string"
+          },
+          "doctor_profile_id": {
+            "type": "string"
+          },
+          "slot_id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "status": {
+            "default": "pending",
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "cancelled",
+              "completed"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "in-person",
+              "video",
+              "phone"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "doctor_profile_id",
+          "slot_id",
+          "date",
+          "status",
+          "mode",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "CreateAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "doctor_profile_id": {
+            "type": "string"
+          },
+          "slot_id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "in-person",
+              "video",
+              "phone"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "doctor_profile_id",
+          "slot_id",
+          "date",
+          "mode"
+        ],
+        "additionalProperties": false
+      },
+      "EmergencyRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "patient_id": {
+            "type": "string"
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Point"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ],
+            "additionalProperties": false
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "default": "open",
+            "type": "string",
+            "enum": [
+              "open",
+              "accepted",
+              "resolved",
+              "cancelled"
+            ]
+          },
+          "accepted_by_doctor_id": {
+            "type": "string"
+          },
+          "accepted_at": {
+            "type": "string"
+          },
+          "resolved_at": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "location",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "CreateEmergencyDto": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Point"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ],
+            "additionalProperties": false
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location"
+        ],
+        "additionalProperties": false
+      },
+      "Prescription": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "patient_id": {
+            "type": "string"
+          },
+          "doctor_id": {
+            "type": "string"
+          },
+          "appointment_id": {
+            "type": "string"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "medications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "dosage": {
+                  "type": "string"
+                },
+                "frequency": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "string"
+                },
+                "instructions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "dosage",
+                "frequency",
+                "duration"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "notes": {
+            "type": "string"
+          },
+          "issued_at": {
+            "type": "string"
+          },
+          "valid_until": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "doctor_id",
+          "diagnosis",
+          "medications",
+          "issued_at",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "CreatePrescriptionDto": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "appointment_id": {
+            "type": "string"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "medications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "dosage": {
+                  "type": "string"
+                },
+                "frequency": {
+                  "type": "string"
+                },
+                "duration": {
+                  "type": "string"
+                },
+                "instructions": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "dosage",
+                "frequency",
+                "duration"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "notes": {
+            "type": "string"
+          },
+          "issued_at": {
+            "type": "string"
+          },
+          "valid_until": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id",
+          "diagnosis",
+          "medications",
+          "issued_at"
+        ],
+        "additionalProperties": false
+      },
+      "DoctorSignupInput": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "birthdate": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "licenseNumber": {
+            "type": "string"
+          },
+          "specialization": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName",
+          "birthdate",
+          "email",
+          "password",
+          "phone",
+          "licenseNumber",
+          "specialization"
+        ],
+        "additionalProperties": false
+      }
     }
   },
   "paths": {
@@ -29,9 +1357,26 @@
             "bearerAuth": []
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMedicineDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
-            "description": "Medicine created successfully"
+            "description": "Medicine created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Medicine"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -47,7 +1392,17 @@
         ],
         "responses": {
           "200": {
-            "description": "List of medicines"
+            "description": "List of medicines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Medicine"
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -75,7 +1430,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Medicine details"
+            "description": "Medicine details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Medicine"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -99,9 +1461,26 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMedicineDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Medicine updated successfully"
+            "description": "Medicine updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Medicine"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -135,6 +1514,222 @@
         }
       }
     },
+    "/api/health-trend/{patientId}": {
+      "get": {
+        "summary": "Full health trend summary for a patient (doctors only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patientId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Start date filter YYYY-MM-DD"
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string"
+            },
+            "description": "End date filter YYYY-MM-DD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated patient health summary"
+          }
+        }
+      }
+    },
+    "/api/health-checks": {
+      "post": {
+        "summary": "Create a new health check record",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHealthCheckDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Health check created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (validation errors)"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all health checks for a specific patient",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of health checks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HealthCheck"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (missing patient_id)"
+          }
+        }
+      }
+    },
+    "/api/health-checks/{id}": {
+      "get": {
+        "summary": "Get a health check by ID",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Health check details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheck"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a health check",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHealthCheckDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Health check updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheck"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a health check",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted successfully"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
     "/api/family": {
       "post": {
         "summary": "Create an elderly profile",
@@ -148,49 +1743,29 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "fullName": {
-                    "type": "string"
-                  },
-                  "dob": {
-                    "type": "string"
-                  },
-                  "medicalConditions": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "emergencyContacts": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "string"
-                        },
-                        "phone": {
-                          "type": "string"
-                        },
-                        "relation": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                },
-                "required": [
-                  "fullName",
-                  "dob"
-                ]
+                "$ref": "#/components/schemas/CreateFamilyProfileInput"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Profile created successfully"
+            "description": "Profile created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "profile": {
+                      "$ref": "#/components/schemas/FamilyProfile"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -206,10 +1781,160 @@
         ],
         "responses": {
           "200": {
-            "description": "A list of elderly profiles"
+            "description": "A list of elderly profiles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profiles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FamilyProfile"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/doctors/nearby": {
+      "get": {
+        "summary": "Find nearby available doctors",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lat",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lng",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "radius",
+            "schema": {
+              "type": "integer",
+              "default": 10000
+            },
+            "description": "Radius in metres (default 10 km)"
+          },
+          {
+            "in": "query",
+            "name": "specialization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of nearby doctor profiles"
+          }
+        }
+      }
+    },
+    "/api/doctors/me": {
+      "get": {
+        "summary": "Get own doctor profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Doctor profile"
+          }
+        }
+      }
+    },
+    "/api/doctors/profile": {
+      "post": {
+        "summary": "Create a doctor profile (doctors only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDoctorProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Doctor profile created"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update own doctor profile fields",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/doctors/availability": {
+      "patch": {
+        "summary": "Update doctor availability slots",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/doctors/{id}": {
+      "get": {
+        "summary": "Get a doctor's public profile by profile id",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Doctor public profile"
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
@@ -222,31 +1947,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "fullName": {
-                    "type": "string",
-                    "example": "John Doe"
-                  },
-                  "birthdate": {
-                    "type": "string",
-                    "example": "1990-01-01"
-                  },
-                  "email": {
-                    "type": "string",
-                    "example": "john@example.com"
-                  },
-                  "password": {
-                    "type": "string",
-                    "example": "password123"
-                  }
-                },
-                "required": [
-                  "fullName",
-                  "birthdate",
-                  "email",
-                  "password"
-                ]
+                "$ref": "#/components/schemas/SignupInput"
               }
             }
           }
@@ -272,21 +1973,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "example": "john@example.com"
-                  },
-                  "password": {
-                    "type": "string",
-                    "example": "password123"
-                  }
-                },
-                "required": [
-                  "email",
-                  "password"
-                ]
+                "$ref": "#/components/schemas/LoginInput"
               }
             }
           }
@@ -300,6 +1987,173 @@
           },
           "401": {
             "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/auth/doctor/signup": {
+      "post": {
+        "summary": "Register a new doctor account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DoctorSignupInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Doctor registered successfully"
+          },
+          "400": {
+            "description": "Validation Error"
+          },
+          "409": {
+            "description": "Conflict Error"
+          }
+        }
+      }
+    },
+    "/api/appointments": {
+      "post": {
+        "summary": "Book an appointment (patients)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Appointment booked"
+          }
+        }
+      }
+    },
+    "/api/appointments/me": {
+      "get": {
+        "summary": "Get my appointments (patient gets own; doctor gets their schedule)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of appointments"
+          }
+        }
+      }
+    },
+    "/api/appointments/{id}/status": {
+      "patch": {
+        "summary": "Update appointment status (doctors only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/appointments/{id}": {
+      "delete": {
+        "summary": "Cancel an appointment",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cancelled"
+          }
+        }
+      }
+    },
+    "/api/ai/chat": {
+      "post": {
+        "summary": "Stream an AI health assistant response",
+        "description": "Accepts a patientId and message history, fetches the patient's health\ndata from the database, and streams a Gemini AI response as SSE events.\nEach event is `data: {\"text\":\"...\"}` and the stream ends with `data: [DONE]`.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "patientId",
+                  "messages"
+                ],
+                "properties": {
+                  "patientId": {
+                    "type": "string"
+                  },
+                  "messages": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "assistant"
+                          ]
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SSE stream of text chunks",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
           }
         }
       }

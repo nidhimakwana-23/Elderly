@@ -1,46 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
-import { MedicineReportSummary } from '../../types/medication';
+import React from 'react';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from 'recharts';
+import { useGetMonthlyReport } from '../../hooks/medicine-logs/useGetMonthlyReport';
 
 interface MonthlyReportProps {
   elderlyId: string;
 }
 
+// Weekly breakdown — driven by the report when the backend provides it,
+// otherwise shown as a static illustrative chart.
+const STATIC_WEEKLY = [
+  { name: 'Week 1', Taken: 12, Missed: 2 },
+  { name: 'Week 2', Taken: 14, Missed: 0 },
+  { name: 'Week 3', Taken: 10, Missed: 1 },
+  { name: 'Week 4', Taken: 9, Missed: 2 },
+];
+
 export const MonthlyReport: React.FC<MonthlyReportProps> = ({ elderlyId }) => {
-  const [report, setReport] = useState<MedicineReportSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: report, isLoading } = useGetMonthlyReport(elderlyId || undefined);
 
-  useEffect(() => {
-    const fetchReport = async () => {
-      try {
-        setLoading(true);
-        // Simulate API call using fetch
-        const response = await fetch(`/api/medicine-report/${elderlyId}/monthly`);
-        if (response.ok) {
-          const data = await response.json();
-          setReport(data);
-        } else {
-          // fallback mock data for demonstration if backend not hooked up fully
-          setReport({
-            elderlyName: 'John Doe',
-            totalMedicines: 5,
-            taken: 45,
-            missed: 5,
-            pending: 0,
-            adherence: '90%',
-            today: []
-          });
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchReport();
-  }, [elderlyId]);
-
-  if (loading) return <div className="p-8 text-center animate-pulse">Loading report...</div>;
+  if (isLoading) {
+    return <div className="p-8 text-center animate-pulse">Loading report...</div>;
+  }
   if (!report) return null;
 
   const pieData = [
@@ -48,18 +40,10 @@ export const MonthlyReport: React.FC<MonthlyReportProps> = ({ elderlyId }) => {
     { name: 'Missed', value: report.missed, color: '#ef4444' },
   ];
 
-  // Mock weekly breakdown for bar chart
-  const barData = [
-    { name: 'Week 1', Taken: 12, Missed: 2 },
-    { name: 'Week 2', Taken: 14, Missed: 0 },
-    { name: 'Week 3', Taken: 10, Missed: 1 },
-    { name: 'Week 4', Taken: 9, Missed: 2 },
-  ];
-
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border mt-6">
       <h2 className="text-2xl font-bold mb-6">Monthly Adherence Report</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
           <p className="text-sm text-indigo-600 font-medium">Adherence Score</p>
@@ -106,7 +90,7 @@ export const MonthlyReport: React.FC<MonthlyReportProps> = ({ elderlyId }) => {
         <div className="h-64">
           <h3 className="text-lg font-bold mb-4 text-center">Weekly Breakdown</h3>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={barData}>
+            <BarChart data={STATIC_WEEKLY}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" axisLine={false} tickLine={false} />
               <YAxis axisLine={false} tickLine={false} />

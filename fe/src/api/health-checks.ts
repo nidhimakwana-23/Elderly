@@ -1,44 +1,33 @@
+import axiosInstance from '../lib/axios';
 import type { HealthCheck, CreateHealthCheckDto, UpdateHealthCheckDto } from '../types/health-check';
 
-const API_URL = '/api/health-checks';
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-};
+const BASE = '/health-checks';
 
 export async function fetchHealthChecks(patientId: string): Promise<HealthCheck[]> {
-  const res = await fetch(`${API_URL}?patient_id=${patientId}`, { headers: getAuthHeaders() });
-  if (!res.ok) throw new Error('Failed to fetch health checks');
-  return res.json();
+  const res = await axiosInstance.get<HealthCheck[]>(BASE, {
+    params: { patient_id: patientId },
+  });
+  return res.data;
+}
+
+export async function fetchHealthCheckById(id: string): Promise<HealthCheck> {
+  const res = await axiosInstance.get<HealthCheck>(`${BASE}/${id}`);
+  return res.data;
 }
 
 export async function createHealthCheck(data: CreateHealthCheckDto): Promise<HealthCheck> {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Failed to create health check');
-  return res.json();
+  const res = await axiosInstance.post<HealthCheck>(BASE, data);
+  return res.data;
 }
 
-export async function updateHealthCheck(id: string, data: UpdateHealthCheckDto): Promise<HealthCheck> {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: 'PUT',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Failed to update health check');
-  return res.json();
+export async function updateHealthCheck(
+  id: string,
+  data: UpdateHealthCheckDto,
+): Promise<HealthCheck> {
+  const res = await axiosInstance.put<HealthCheck>(`${BASE}/${id}`, data);
+  return res.data;
 }
 
 export async function deleteHealthCheck(id: string): Promise<void> {
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error('Failed to delete health check');
+  await axiosInstance.delete(`${BASE}/${id}`);
 }

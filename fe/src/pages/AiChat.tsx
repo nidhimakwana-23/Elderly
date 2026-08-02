@@ -87,7 +87,7 @@ function ChatBubble({ message }: { message: Message }) {
 }
 
 // ─── Main AiChat Component ────────────────────────────────────────────────────
-const BACKEND_URL = 'http://localhost:3001';
+// API calls go through Vite's /api proxy (configured in vite.config.ts → localhost:3001)
 
 export function AiChat() {
   const [patientId, setPatientId] = useState('');
@@ -156,7 +156,7 @@ export function AiChat() {
     abortRef.current = new AbortController();
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/ai/chat`, {
+      const response = await fetch(`/api/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

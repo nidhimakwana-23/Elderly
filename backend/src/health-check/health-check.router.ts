@@ -1,8 +1,17 @@
 import { Router } from 'express';
 import type { HealthCheckController } from './health-check.controller.js';
+import { requireAuth } from '../middleware/auth.middleware.js';
+import { requirePatientAccess } from '../middleware/patient-access.middleware.js';
+import type { IUserRepository } from '../db/user.repository.js';
 
-export function createHealthCheckRouter(healthCheckController: HealthCheckController): Router {
+export function createHealthCheckRouter(
+  healthCheckController: HealthCheckController,
+  userRepository: IUserRepository,
+): Router {
   const router = Router();
+
+  router.use(requireAuth);
+  const patientAccess = requirePatientAccess(userRepository);
 
   /**
    * @openapi
@@ -27,7 +36,7 @@ export function createHealthCheckRouter(healthCheckController: HealthCheckContro
    *       400:
    *         description: Bad request (validation errors)
    */
-  router.post('/', healthCheckController.createHealthCheck);
+  router.post('/', patientAccess, healthCheckController.createHealthCheck);
 
   /**
    * @openapi
@@ -54,7 +63,7 @@ export function createHealthCheckRouter(healthCheckController: HealthCheckContro
    *       400:
    *         description: Bad request (missing patient_id)
    */
-  router.get('/', healthCheckController.getHealthChecks);
+  router.get('/', patientAccess, healthCheckController.getHealthChecks);
 
   /**
    * @openapi

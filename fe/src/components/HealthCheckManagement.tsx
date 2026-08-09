@@ -5,6 +5,7 @@ import { HealthCheckFormModal } from './HealthCheckFormModal';
 import type { HealthCheck, CreateHealthCheckDto } from '../types/health-check';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useAuth } from '../context/AuthContext';
+import { useFamilyMember } from '../context/FamilyMemberContext';
 import { useGetHealthChecks } from '../hooks/health-checks/useGetHealthChecks';
 import { useCreateHealthCheck } from '../hooks/health-checks/useCreateHealthCheck';
 import { useUpdateHealthCheck } from '../hooks/health-checks/useUpdateHealthCheck';
@@ -15,9 +16,9 @@ export function HealthCheckManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<HealthCheck | null>(null);
 
-  // ── Auth ─────────────────────────────────────────────────────────────────
-  const { user } = useAuth();
-  const patientId = user?.id;
+  // ── Active Family Member Context ─────────────────────────────────────────
+  const { activeMemberId, activeMemberName, isSelf } = useFamilyMember();
+  const patientId = activeMemberId;
 
   // ── Data ─────────────────────────────────────────────────────────────────
   const { data: records = [], isLoading } = useGetHealthChecks(patientId);
@@ -83,7 +84,9 @@ export function HealthCheckManagement() {
             </span>
             Health Metrics
           </h1>
-          <p className="text-slate-500 mt-2 text-lg">Monitor vitals and track progress over time.</p>
+          <p className="text-slate-500 mt-2 text-lg">
+            Monitor vitals and track progress over time{!isSelf && <span className="text-indigo-600 font-semibold ml-1.5">for {activeMemberName}</span>}.
+          </p>
         </div>
         <button
           onClick={() => { setEditingRecord(null); setIsModalOpen(true); }}

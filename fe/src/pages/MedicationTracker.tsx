@@ -7,6 +7,7 @@ import { MedicineCard } from '../components/Medication/MedicineCard';
 import { MonthlyReport } from '../components/Medication/MonthlyReport';
 import { Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useFamilyMember } from '../context/FamilyMemberContext';
 import { useGetMedicineLogs } from '../hooks/medicine-logs/useGetMedicineLogs';
 import { useUpdateLogStatus } from '../hooks/medicine-logs/useUpdateLogStatus';
 
@@ -15,9 +16,9 @@ const periods = ['Morning', 'Afternoon', 'Evening', 'Night'] as const;
 export const MedicationTracker: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // ── Auth — elderlyId is the logged-in user's ID ───────────────────────────
-  const { user } = useAuth();
-  const elderlyId = user?.id;
+  // ── Active Family Member Context ──────────────────────────────────────────
+  const { activeMemberId, activeMemberName, isSelf } = useFamilyMember();
+  const elderlyId = activeMemberId;
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const { data: logs = [], isLoading } = useGetMedicineLogs(elderlyId, selectedDate);
@@ -51,9 +52,16 @@ export const MedicationTracker: React.FC = () => {
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-12">
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-extrabold text-indigo-900 tracking-tight">
-            Medication Tracker
-          </h1>
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-2xl font-extrabold text-indigo-900 tracking-tight">
+              Medication Tracker
+            </h1>
+            {!isSelf && (
+              <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+                for {activeMemberName}
+              </span>
+            )}
+          </div>
           <button className="p-2 rounded-full hover:bg-gray-100 relative transition-colors">
             <Bell size={24} className="text-gray-600" />
             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />

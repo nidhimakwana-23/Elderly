@@ -124,7 +124,7 @@ async function seed(primaryElderlyId: string): Promise<void> {
       id: primaryUserId,
       fullName: 'Nidhi Makwana',
       birthdate: '2001-09-23',
-      email: 'nidhi@gmal.com',
+      email: 'nidhi@gmail.com',
       passwordHash,
       phone: '+1-555-0100',
       createdAt: formatDate(subDays(today, 400)) + 'T08:00:00.000Z',

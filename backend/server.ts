@@ -124,10 +124,10 @@ app.get('/api', (_req: Request, res: Response) => {
 
 app.use('/api/auth',            createAuthRouter(authController));
 app.use('/api/family',          createFamilyRouter(familyController));
-app.use('/api/medicines',       createMedicineRouter(medicineController));
-app.use('/api/medicine-logs',   createMedicineLogsRouter(medicineLogsController));
-app.use('/api/medicine-report', createMedicineReportRouter(medicineLogsController));
-app.use('/api/health-checks',   createHealthCheckRouter(healthCheckController));
+app.use('/api/medicines',       createMedicineRouter(medicineController, userRepository));
+app.use('/api/medicine-logs',   createMedicineLogsRouter(medicineLogsController, userRepository));
+app.use('/api/medicine-report', createMedicineReportRouter(medicineLogsController, userRepository));
+app.use('/api/health-checks',   createHealthCheckRouter(healthCheckController, userRepository));
 app.use('/api/doctors',         createDoctorRouter(doctorController));
 app.use('/api/appointments',    createAppointmentRouter(appointmentController));
 app.use('/api/emergency',       createEmergencyRouter(emergencyController));

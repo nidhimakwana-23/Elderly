@@ -1,12 +1,18 @@
 import { Router } from 'express';
 import { MedicineController } from './medicine.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
+import { requirePatientAccess } from '../middleware/patient-access.middleware.js';
+import type { IUserRepository } from '../db/user.repository.js';
 
-export function createMedicineRouter(medicineController: MedicineController): Router {
+export function createMedicineRouter(
+  medicineController: MedicineController,
+  userRepository: IUserRepository,
+): Router {
   const router = Router();
 
   // Apply auth middleware to all medicine routes
   router.use(requireAuth);
+  const patientAccess = requirePatientAccess(userRepository);
 
   /**
    * @openapi
@@ -31,7 +37,7 @@ export function createMedicineRouter(medicineController: MedicineController): Ro
    *       401:
    *         description: Unauthorized
    */
-  router.post('/', medicineController.createMedicine);
+  router.post('/', patientAccess, medicineController.createMedicine);
 
   /**
    * @openapi
@@ -52,7 +58,7 @@ export function createMedicineRouter(medicineController: MedicineController): Ro
    *       401:
    *         description: Unauthorized
    */
-  router.get('/', medicineController.getMedicines);
+  router.get('/', patientAccess, medicineController.getMedicines);
 
   /**
    * @openapi

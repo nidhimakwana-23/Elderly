@@ -7,6 +7,6 @@
  */
 export const medicineKeys = {
   all: ['medicines'] as const,
-  lists: () => [...medicineKeys.all, 'list'] as const,
+  lists: (patientId?: string) => [...medicineKeys.all, 'list', patientId ?? 'default'] as const,
   detail: (id: string) => [...medicineKeys.all, 'detail', id] as const,
 } as const;

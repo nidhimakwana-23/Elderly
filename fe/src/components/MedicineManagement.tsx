@@ -8,24 +8,30 @@ import { useCreateMedicine } from '../hooks/medicines/useCreateMedicine';
 import { useUpdateMedicine } from '../hooks/medicines/useUpdateMedicine';
 import { useDeleteMedicine } from '../hooks/medicines/useDeleteMedicine';
 
+import { useFamilyMember } from '../context/FamilyMemberContext';
+
 export function MedicineManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'All' | 'Active' | 'Completed' | 'Upcoming' | 'Expired'>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
 
+  // ── Active Family Member Context ────────────────────────────────────────────
+  const { activeMemberId, activeMemberName, isSelf } = useFamilyMember();
+
   // ── Data ────────────────────────────────────────────────────────────────────
-  const { data: medicines = [], isLoading } = useGetMedicines();
+  const { data: medicines = [], isLoading } = useGetMedicines(activeMemberId);
   const createMutation = useCreateMedicine();
   const updateMutation = useUpdateMedicine();
   const deleteMutation = useDeleteMedicine();
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleSave = async (data: CreateMedicineDto) => {
+    const payload = { ...data, patient_id: activeMemberId };
     if (editingMedicine?.id) {
-      await updateMutation.mutateAsync({ id: editingMedicine.id, data });
+      await updateMutation.mutateAsync({ id: editingMedicine.id, data: payload });
     } else {
-      await createMutation.mutateAsync(data);
+      await createMutation.mutateAsync(payload);
     }
     setIsModalOpen(false);
     setEditingMedicine(null);
@@ -48,7 +54,9 @@ export function MedicineManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Medicine Management</h1>
-          <p className="text-slate-500 mt-1">Keep track of your medications and schedules.</p>
+          <p className="text-slate-500 mt-1">
+            Keep track of medications and schedules{!isSelf && <span className="text-indigo-600 font-semibold ml-1.5">for {activeMemberName}</span>}.
+          </p>
         </div>
         <button
           onClick={() => { setEditingMedicine(null); setIsModalOpen(true); }}

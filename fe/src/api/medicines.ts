@@ -3,8 +3,10 @@ import type { Medicine, CreateMedicineDto, UpdateMedicineDto } from '../types/me
 
 const BASE = '/medicines';
 
-export async function fetchMedicines(): Promise<Medicine[]> {
-  const res = await axiosInstance.get<Medicine[]>(BASE);
+export async function fetchMedicines(patientId?: string): Promise<Medicine[]> {
+  const res = await axiosInstance.get<Medicine[]>(BASE, {
+    params: patientId ? { patient_id: patientId } : undefined,
+  });
   return res.data;
 }
 

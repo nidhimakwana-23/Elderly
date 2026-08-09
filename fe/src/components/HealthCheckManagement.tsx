@@ -1,18 +1,20 @@
 import { useState, useMemo } from 'react';
-import { Activity, Plus, HeartPulse, Scale, Droplet, Search, Edit2, Trash2 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { Activity, Plus, HeartPulse, Scale, Droplet, Search, Edit2, Trash2, Calendar } from 'lucide-react';
+import { format, parseISO, subDays, subMonths, subYears, isAfter, startOfDay } from 'date-fns';
 import { HealthCheckFormModal } from './HealthCheckFormModal';
 import type { HealthCheck, CreateHealthCheckDto } from '../types/health-check';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useAuth } from '../context/AuthContext';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useFamilyMember } from '../context/FamilyMemberContext';
 import { useGetHealthChecks } from '../hooks/health-checks/useGetHealthChecks';
 import { useCreateHealthCheck } from '../hooks/health-checks/useCreateHealthCheck';
 import { useUpdateHealthCheck } from '../hooks/health-checks/useUpdateHealthCheck';
 import { useDeleteHealthCheck } from '../hooks/health-checks/useDeleteHealthCheck';
 
+type DateRangeOption = '7d' | '30d' | '90d' | '6m' | '1y' | 'all';
+
 export function HealthCheckManagement() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<DateRangeOption>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<HealthCheck | null>(null);
 
@@ -53,21 +55,52 @@ export function HealthCheckManagement() {
   };
 
   // ── Derived data ──────────────────────────────────────────────────────────
-  const filteredRecords = records
-    .filter(
-      (r) =>
-        (r.notes || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.date.includes(searchQuery),
-    )
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const filteredRecords = useMemo(() => {
+    return records
+      .filter(
+        (r) =>
+          (r.notes || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.date.includes(searchQuery),
+      )
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [records, searchQuery]);
+
+  const cutoffDate = useMemo(() => {
+    const now = startOfDay(new Date());
+    switch (dateRange) {
+      case '7d':
+        return subDays(now, 7);
+      case '30d':
+        return subDays(now, 30);
+      case '90d':
+        return subDays(now, 90);
+      case '6m':
+        return subMonths(now, 6);
+      case '1y':
+        return subYears(now, 1);
+      case 'all':
+      default:
+        return null;
+    }
+  }, [dateRange]);
+
+  const chartRecords = useMemo(() => {
+    if (!cutoffDate) return filteredRecords;
+    return filteredRecords.filter((r) => {
+      const recDate = parseISO(r.date);
+      return isAfter(recDate, cutoffDate) || recDate.getTime() >= cutoffDate.getTime();
+    });
+  }, [filteredRecords, cutoffDate]);
 
   const chartData = useMemo(() => {
-    return [...filteredRecords].reverse().map((r) => ({
-      date: format(parseISO(r.date), 'MMM dd'),
+    const formatStr = dateRange === '1y' || dateRange === 'all' ? 'MMM dd, yy' : 'MMM dd';
+    return [...chartRecords].reverse().map((r) => ({
+      date: format(parseISO(r.date), formatStr),
+      fullDate: format(parseISO(r.date), 'MMM dd, yyyy'),
       weight: r.weight,
       sugar: r.sugar_level,
     }));
-  }, [filteredRecords]);
+  }, [chartRecords, dateRange]);
 
   const isMutating =
     createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
@@ -99,54 +132,178 @@ export function HealthCheckManagement() {
       </div>
 
       {/* Charts */}
-      {chartData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-            <h3 className="text-lg font-semibold text-slate-800 mb-6">Health Trends</h3>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} dy={10} />
-                  <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
-                  <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                  <Line yAxisId="left" type="monotone" name="Weight (kg)" dataKey="weight" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                  <Line yAxisId="right" type="monotone" name="Blood Sugar" dataKey="sugar" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
+      {filteredRecords.length > 0 && (
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Activity size={22} className="text-indigo-600" />
+                Health Trends
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Showing {chartData.length} {chartData.length === 1 ? 'entry' : 'entries'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-indigo-500" />
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value as DateRangeOption)}
+                className="bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-medium rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:bg-slate-100 transition-colors"
+              >
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+                <option value="6m">Last 6 Months</option>
+                <option value="1y">Last 1 Year</option>
+                <option value="all">All Time</option>
+              </select>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 shadow-sm text-white flex flex-col justify-between">
-            <div>
-              <h3 className="text-lg font-medium opacity-90 mb-1">Latest Reading</h3>
-              <p className="text-3xl font-bold">
-                {filteredRecords[0]?.date
-                  ? format(parseISO(filteredRecords[0].date), 'MMMM do, yyyy')
-                  : 'No records'}
-              </p>
-            </div>
-            {filteredRecords[0] && (
-              <div className="space-y-4 mt-8">
-                <div className="flex items-center justify-between bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-3">
-                    <Scale size={20} className="opacity-80" />
-                    <span>Weight</span>
+          {chartData.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Weight Chart */}
+              <div className="bg-slate-50/60 rounded-2xl p-5 border border-slate-100 flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600">
+                      <Scale size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 text-sm">Weight Trend</h4>
+                      <p className="text-[11px] text-slate-400">Kilograms (kg)</p>
+                    </div>
                   </div>
-                  <span className="font-semibold text-lg">{filteredRecords[0].weight || '--'} kg</span>
                 </div>
-                <div className="flex items-center justify-between bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-3">
-                    <Droplet size={20} className="opacity-80" />
-                    <span>Blood Sugar</span>
-                  </div>
-                  <span className="font-semibold text-lg">{filteredRecords[0].sugar_level || '--'}</span>
+                <div className="h-[220px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 5, left: -20 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis
+                        dataKey="date"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8', fontSize: 11 }}
+                        dy={8}
+                        minTickGap={15}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis
+                        domain={['dataMin - 3', 'dataMax + 3']}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8', fontSize: 11 }}
+                      />
+                      <Tooltip
+                        labelFormatter={(_, payload) => payload?.[0]?.payload?.fullDate || ''}
+                        formatter={(val: any) => [`${val} kg`, 'Weight']}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="weight"
+                        stroke="#6366f1"
+                        strokeWidth={3}
+                        connectNulls
+                        dot={{ r: 4, strokeWidth: 2, fill: '#ffffff', stroke: '#6366f1' }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
-            )}
-          </div>
+
+              {/* Blood Sugar Chart */}
+              <div className="bg-slate-50/60 rounded-2xl p-5 border border-slate-100 flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-rose-100 rounded-xl text-rose-600">
+                      <Droplet size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 text-sm">Blood Sugar Trend</h4>
+                      <p className="text-[11px] text-slate-400">Glucose level</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="h-[220px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 5, left: -20 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis
+                        dataKey="date"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8', fontSize: 11 }}
+                        dy={8}
+                        minTickGap={15}
+                        interval="preserveStartEnd"
+                      />
+                      <YAxis
+                        domain={['dataMin - 10', 'dataMax + 10']}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#94a3b8', fontSize: 11 }}
+                      />
+                      <Tooltip
+                        labelFormatter={(_, payload) => payload?.[0]?.payload?.fullDate || ''}
+                        formatter={(val: any) => [val, 'Blood Sugar']}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="sugar"
+                        stroke="#f43f5e"
+                        strokeWidth={3}
+                        connectNulls
+                        dot={{ r: 4, strokeWidth: 2, fill: '#ffffff', stroke: '#f43f5e' }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Latest Reading Card */}
+              <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl p-6 shadow-sm text-white flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-indigo-200 mb-1">Latest Reading</h3>
+                  <p className="text-2xl font-bold">
+                    {filteredRecords[0]?.date
+                      ? format(parseISO(filteredRecords[0].date), 'MMMM do, yyyy')
+                      : 'No records'}
+                  </p>
+                </div>
+                {filteredRecords[0] && (
+                  <div className="space-y-3 mt-6">
+                    <div className="flex items-center justify-between bg-white/10 rounded-xl p-3.5 backdrop-blur-sm">
+                      <div className="flex items-center gap-2.5">
+                        <Scale size={18} className="text-indigo-200" />
+                        <span className="text-sm font-medium">Weight</span>
+                      </div>
+                      <span className="font-bold text-base">{filteredRecords[0].weight ? `${filteredRecords[0].weight} kg` : '--'}</span>
+                    </div>
+                    <div className="flex items-center justify-between bg-white/10 rounded-xl p-3.5 backdrop-blur-sm">
+                      <div className="flex items-center gap-2.5">
+                        <Droplet size={18} className="text-rose-200" />
+                        <span className="text-sm font-medium">Blood Sugar</span>
+                      </div>
+                      <span className="font-bold text-base">{filteredRecords[0].sugar_level || '--'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="h-[240px] w-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+              <Calendar size={36} className="text-slate-300 mb-2" />
+              <p className="text-sm font-medium text-slate-600">No records found in this timeframe</p>
+              <p className="text-xs text-slate-400 mt-1 max-w-xs">
+                Try adjusting the date range dropdown to 'All Time' or log new vitals for this member.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useFamilyMember } from '../context/FamilyMemberContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Message {
@@ -90,8 +91,7 @@ function ChatBubble({ message }: { message: Message }) {
 // API calls go through Vite's /api proxy (configured in vite.config.ts → localhost:3001)
 
 export function AiChat() {
-  const [patientId, setPatientId] = useState('');
-  const [patientIdInput, setPatientIdInput] = useState('');
+  const { activeMemberId, activeMemberName, isSelf } = useFamilyMember();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -99,6 +99,27 @@ export function AiChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Re-initialize welcome message whenever activeMemberId or activeMemberName changes
+  useEffect(() => {
+    if (!activeMemberId) return;
+
+    abortRef.current?.abort();
+    setIsLoading(false);
+    setError(null);
+
+    const welcomeContent = isSelf
+      ? "Hello! 👋 I'm your personal health assistant. I have access to your health records and medicine logs. Feel free to ask me anything — like:\n\n- **How am I doing with my medicines?**\n- **What do my sugar levels look like recently?**\n- **What should I eat given my health condition?**"
+      : `Hello! 👋 I'm the health assistant for ${activeMemberName}. I have access to their health records and medicine logs. Feel free to ask me anything — like:\n\n- **How is ${activeMemberName} doing with their medicines?**\n- **What do ${activeMemberName}'s sugar levels look like recently?**\n- **What should ${activeMemberName} eat given their health condition?**`;
+
+    setMessages([
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: welcomeContent,
+      },
+    ]);
+  }, [activeMemberId, activeMemberName, isSelf]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -113,24 +134,9 @@ export function AiChat() {
     }
   }, [input]);
 
-  const handlePatientIdSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = patientIdInput.trim();
-    if (!trimmed) return;
-    setPatientId(trimmed);
-    setMessages([
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content:
-          "Hello! 👋 I'm your personal health assistant. I have access to your health records and medicine logs. Feel free to ask me anything — like:\n\n- **How am I doing with my medicines?**\n- **What do my sugar levels look like recently?**\n- **What should I eat given my health condition?**",
-      },
-    ]);
-  };
-
   const sendMessage = useCallback(async () => {
     const trimmed = input.trim();
-    if (!trimmed || isLoading || !patientId) return;
+    if (!trimmed || isLoading || !activeMemberId) return;
 
     setError(null);
     setInput('');
@@ -160,7 +166,7 @@ export function AiChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patientId,
+          patientId: activeMemberId,
           messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
         }),
         signal: abortRef.current.signal,
@@ -229,7 +235,7 @@ export function AiChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages, patientId]);
+  }, [input, isLoading, messages, activeMemberId]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -246,41 +252,15 @@ export function AiChat() {
     );
   };
 
-  // ─── Patient ID Gate ──────────────────────────────────────────────────────
-  if (!patientId) {
+  // Loading state if activeMemberId is not yet available
+  if (!activeMemberId) {
     return (
       <div className="min-h-[calc(100vh-56px)] bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl shadow-xl p-10 w-full max-w-md text-center">
-          {/* Icon */}
-          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <span className="text-4xl">🤖</span>
+        <div className="bg-white rounded-3xl shadow-xl p-8 text-center max-w-sm">
+          <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+            <span className="text-2xl">🤖</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Health AI Assistant</h1>
-          <p className="text-gray-500 text-sm mb-8">
-            Enter a patient ID to load their health data and start your conversation.
-          </p>
-          <form onSubmit={handlePatientIdSubmit} className="space-y-4">
-            <input
-              id="patient-id-input"
-              type="text"
-              placeholder="Enter Patient ID (MongoDB ObjectId)"
-              value={patientIdInput}
-              onChange={(e) => setPatientIdInput(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50 font-mono"
-              autoFocus
-            />
-            <button
-              id="start-chat-btn"
-              type="submit"
-              disabled={!patientIdInput.trim()}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-xl hover:opacity-90 disabled:opacity-40 transition-all duration-200 shadow-md"
-            >
-              Start Chat →
-            </button>
-          </form>
-          <p className="text-xs text-gray-400 mt-4">
-            The AI will analyse their medicines, health checks, and adherence patterns.
-          </p>
+          <p className="text-gray-600 text-sm font-medium">Loading active member profile…</p>
         </div>
       </div>
     );
@@ -297,8 +277,13 @@ export function AiChat() {
           </div>
           <div>
             <h2 className="font-bold text-gray-800 text-sm">Health AI Assistant</h2>
-            <p className="text-xs text-gray-400 font-mono truncate max-w-[200px]">
-              Patient: {patientId}
+            <p className="text-xs text-gray-500 flex items-center gap-1 font-medium">
+              Viewing: <span className="font-semibold text-indigo-600">{activeMemberName}</span>
+              {isSelf && (
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">
+                  You
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -307,13 +292,6 @@ export function AiChat() {
             <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
             {isLoading ? 'Analysing...' : 'Ready'}
           </span>
-          <button
-            id="change-patient-btn"
-            onClick={() => { setPatientId(''); setPatientIdInput(''); setMessages([]); }}
-            className="text-xs text-gray-400 hover:text-indigo-600 transition-colors"
-          >
-            Change Patient
-          </button>
         </div>
       </div>
 
@@ -337,12 +315,20 @@ export function AiChat() {
       {/* Quick prompts (shown when only welcome message is present) */}
       {messages.length === 1 && (
         <div className="px-4 pb-3 flex flex-wrap gap-2 justify-center">
-          {[
-            'How am I doing with my medicines?',
-            'Analyse my recent sugar levels',
-            'What diet should I follow?',
-            'Am I skipping any medicines?',
-          ].map((prompt) => (
+          {(isSelf
+            ? [
+                'How am I doing with my medicines?',
+                'Analyse my recent sugar levels',
+                'What diet should I follow?',
+                'Am I skipping any medicines?',
+              ]
+            : [
+                `How is ${activeMemberName} doing with medicines?`,
+                `Analyse ${activeMemberName}'s recent sugar levels`,
+                `What diet is recommended for ${activeMemberName}?`,
+                `Is ${activeMemberName} skipping any medicines?`,
+              ]
+          ).map((prompt) => (
             <button
               key={prompt}
               onClick={() => { setInput(prompt); textareaRef.current?.focus(); }}
@@ -401,3 +387,4 @@ export function AiChat() {
     </div>
   );
 }
+

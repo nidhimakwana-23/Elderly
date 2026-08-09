@@ -6,7 +6,6 @@ import { DashboardWidget } from '../components/Medication/DashboardWidget';
 import { MedicineCard } from '../components/Medication/MedicineCard';
 import { MonthlyReport } from '../components/Medication/MonthlyReport';
 import { Bell } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import { useFamilyMember } from '../context/FamilyMemberContext';
 import { useGetMedicineLogs } from '../hooks/medicine-logs/useGetMedicineLogs';
 import { useUpdateLogStatus } from '../hooks/medicine-logs/useUpdateLogStatus';

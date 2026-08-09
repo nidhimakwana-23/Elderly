@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, UserPlus, Heart, PhoneCall, ChevronRight, ChevronLeft, Check, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { X, UserPlus, Heart, ChevronRight, ChevronLeft, Check, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useCreateFamilyMember } from '../hooks/family/useCreateFamilyMember';
 import type { CreateFamilyProfileInput, EmergencyContactInput } from '../types/family-member';
 

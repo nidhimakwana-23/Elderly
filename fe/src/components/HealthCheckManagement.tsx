@@ -14,7 +14,7 @@ type DateRangeOption = '7d' | '30d' | '90d' | '6m' | '1y' | 'all';
 
 export function HealthCheckManagement() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateRange, setDateRange] = useState<DateRangeOption>('all');
+  const [dateRange, setDateRange] = useState<DateRangeOption>('90d');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<HealthCheck | null>(null);
 

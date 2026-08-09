@@ -13,6 +13,8 @@ To DO:
   - Doctor signup
   - Doctor appointment schedule
   - OTher remaining ones
+- Add logout option
+- ADd option for fmaily signup
 - Add other modules
     - Caretaker module
 - USe openAPi generator to generate schema

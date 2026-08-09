@@ -37,8 +37,29 @@ export class MongooseUserRepository implements IUserRepository {
   }
 
   async getFamilyProfilesByUserId(linkedToUserId: string): Promise<FamilyProfile[]> {
-    return FamilyProfileModel.find({ linkedToUserId })
+    const profiles = await FamilyProfileModel.find({ linkedToUserId })
       .select('-_id -__v')
       .lean<FamilyProfile[]>();
+
+    if (profiles.length === 0) return [];
+
+    // Batch-fetch the User records for all profiles in one query
+    const userIds = profiles.map((p) => p.userId);
+    const users = await UserModel.find({ id: { $in: userIds } })
+      .select('id fullName email -_id')
+      .lean<{ id: string; fullName: string; email: string }[]>();
+
+    // Build a fast lookup map: userId -> { fullName, email }
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    // Merge user info into each profile
+    return profiles.map((profile) => {
+      const user = userMap.get(profile.userId);
+      return {
+        ...profile,
+        fullName: user?.fullName,
+        email: user?.email,
+      };
+    });
   }
 }

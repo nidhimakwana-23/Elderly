@@ -19,6 +19,8 @@ export interface FamilyProfile {
   linkedToUserId: string;
   medicalCondition: string;
   emergencyContacts: string[];
+  /** Enriched from the User record by the backend — always present for valid profiles. */
   fullName?: string;
+  /** Enriched from the User record by the backend — always present for valid profiles. */
   email?: string;
 }

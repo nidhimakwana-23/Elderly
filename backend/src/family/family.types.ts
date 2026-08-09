@@ -2,10 +2,13 @@ import { z } from 'zod';
 
 export const FamilyProfileSchema = z.object({
   id: z.string(),
-  userId: z.string(), // The family member's own User ID
-  linkedToUserId: z.string(), // The ID of the normal user who created this profile
+  userId: z.string(),           // The family member's own User ID
+  linkedToUserId: z.string(),   // The ID of the normal user who created this profile
   medicalCondition: z.string(),
   emergencyContacts: z.array(z.string()),
+  // Enriched from the User record — not stored on the profile document itself
+  fullName: z.string().optional(),
+  email: z.string().optional(),
 });
 
 export type FamilyProfile = z.infer<typeof FamilyProfileSchema>;

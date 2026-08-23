@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { logger } from '../utils/logger.js';
 import { FamilyService, ValidationError, ConflictError } from './family.service.js';
 
 export class FamilyController {
@@ -22,7 +23,7 @@ export class FamilyController {
       } else if (error instanceof ConflictError) {
         res.status(409).json({ error: error.message });
       } else {
-        console.error('[FamilyController.createProfile] Unexpected error:', error);
+        logger.error('[FamilyController.createProfile] Unexpected error:', error);
         res.status(500).json({ error: 'Internal server error.' });
       }
     }
@@ -38,7 +39,7 @@ export class FamilyController {
       const profiles = await this.familyService.getFamilyProfiles(linkedToUserId);
       res.status(200).json({ profiles });
     } catch (error) {
-      console.error('[FamilyController.getProfiles] Unexpected error:', error);
+      logger.error('[FamilyController.getProfiles] Unexpected error:', error);
       res.status(500).json({ error: 'Internal server error.' });
     }
   };

@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { logger } from '../utils/logger.js';
 import {
   AuthService,
   ConflictError,
@@ -7,7 +8,7 @@ import {
 } from './auth.service.js';
 
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   signup = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -22,7 +23,7 @@ export class AuthController {
       } else if (error instanceof ConflictError) {
         res.status(409).json({ error: error.message });
       } else {
-        console.error('[AuthController.signup] Unexpected error:', error);
+        logger.error('[AuthController.signup] Unexpected error:', error);
         res.status(500).json({ error: 'Internal server error.' });
       }
     }
@@ -41,7 +42,7 @@ export class AuthController {
       } else if (error instanceof UnauthorizedError) {
         res.status(401).json({ error: error.message });
       } else {
-        console.error('[AuthController.login] Unexpected error:', error);
+        logger.error('[AuthController.login] Unexpected error:', error);
         res.status(500).json({ error: 'Internal server error.' });
       }
     }
@@ -61,7 +62,7 @@ export class AuthController {
       } else if (error instanceof ConflictError) {
         res.status(409).json({ error: error.message });
       } else {
-        console.error('[AuthController.doctorSignup] Unexpected error:', error);
+        logger.error('[AuthController.doctorSignup] Unexpected error:', error);
         res.status(500).json({ error: 'Internal server error.' });
       }
     }

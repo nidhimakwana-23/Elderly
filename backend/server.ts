@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import express, { type Request, type Response } from 'express';
+import { logger } from './src/utils/logger.js';
+import express, { type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
@@ -75,6 +76,20 @@ const port = process.env['PORT'] ?? 3001;
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }));
 app.use(express.json());
 
+// ─── Request / Response Logger ───────────────────────────────────────────────
+// Logs: timestamp · method · path · status · latency
+// Colors: green for 2xx, yellow for 3xx/4xx, red for 5xx
+app.use((req: Request, res: Response, next: NextFunction): void => {
+  const startAt = process.hrtime.bigint();
+
+  res.on('finish', () => {
+    const durationMs = Number(process.hrtime.bigint() - startAt) / 1_000_000;
+    logger.http(req.method, req.originalUrl, res.statusCode, durationMs);
+  });
+
+  next();
+});
+
 // ─── Dependency wiring ────────────────────────────────────────────────────────
 // This is the ONE place where concrete implementations are chosen.
 // To swap the storage layer, only change the repository instantiations below.
@@ -134,6 +149,42 @@ app.use('/api/emergency', createEmergencyRouter(emergencyController));
 app.use('/api/prescriptions', createPrescriptionRouter(prescriptionController));
 app.use('/api/health-trend', createHealthTrendRouter(healthTrendController));
 app.use('/api/ai', createAiRouter(aiController));
+
+// ─── 404 Handler ─────────────────────────────────────────────────────────────
+app.use((req: Request, res: Response): void => {
+  logger.warn(`[404] Route not found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    status: 'error',
+    statusCode: 404,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
+});
+
+// ─── Global Error Handler ─────────────────────────────────────────────────────
+// Must have exactly 4 parameters so Express recognises it as an error handler.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction): void => {
+  const statusCode =
+    err instanceof Error && 'statusCode' in err && typeof (err as { statusCode: unknown }).statusCode === 'number'
+      ? (err as { statusCode: number }).statusCode
+      : 500;
+
+  const message = err instanceof Error ? err.message : 'Internal Server Error';
+
+  if (statusCode >= 500) {
+    logger.error('[ERROR] Unhandled exception caught by global error handler:', err);
+  } else {
+    logger.warn(`[WARN] Client error ${statusCode}: ${message}`);
+  }
+
+  if (res.headersSent) return;
+
+  res.status(statusCode).json({
+    status: 'error',
+    statusCode,
+    message,
+  });
+});
 
 // ─── OpenAPI / Scalar ─────────────────────────────────────────────────────────
 const swaggerOptions = {
@@ -208,10 +259,10 @@ app.use(
 connectDB()
   .then(() => {
     app.listen(port, () => {
-      console.log(`Server listening on http://localhost:${port}`);
+      logger.info(`Server listening on http://localhost:${port}`);
     });
   })
   .catch((err: unknown) => {
-    console.error('❌  Failed to connect to MongoDB:', err);
+    logger.error('❌  Failed to connect to MongoDB:', err);
     process.exit(1);
   });

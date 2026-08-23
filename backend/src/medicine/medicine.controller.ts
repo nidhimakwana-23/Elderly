@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express';
+import { logger } from '../utils/logger.js';
 import type { MedicineService } from './medicine.service.js';
 
 export class MedicineController {
-  constructor(private readonly medicineService: MedicineService) {}
+  constructor(private readonly medicineService: MedicineService) { }
 
   createMedicine = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -15,7 +16,7 @@ export class MedicineController {
       const medicine = await this.medicineService.createMedicine(target_patient, req.body);
       res.status(201).json(medicine);
     } catch (error) {
-      console.error('[MedicineController.createMedicine]', error);
+      logger.error('[MedicineController.createMedicine]', error);
       res.status(500).json({ error: 'Internal server error.' });
     }
   };
@@ -31,7 +32,7 @@ export class MedicineController {
       const medicines = await this.medicineService.getMedicines(target_patient);
       res.status(200).json(medicines);
     } catch (error) {
-      console.error('[MedicineController.getMedicines]', error);
+      logger.error('[MedicineController.getMedicines]', error);
       res.status(500).json({ error: 'Internal server error.' });
     }
   };
@@ -45,7 +46,7 @@ export class MedicineController {
       }
       res.status(200).json(medicine);
     } catch (error) {
-      console.error('[MedicineController.getMedicineById]', error);
+      logger.error('[MedicineController.getMedicineById]', error);
       res.status(500).json({ error: 'Internal server error.' });
     }
   };
@@ -59,7 +60,7 @@ export class MedicineController {
       }
       res.status(200).json(medicine);
     } catch (error) {
-      console.error('[MedicineController.updateMedicine]', error);
+      logger.error('[MedicineController.updateMedicine]', error);
       res.status(500).json({ error: 'Internal server error.' });
     }
   };
@@ -73,7 +74,7 @@ export class MedicineController {
       }
       res.status(204).send();
     } catch (error) {
-      console.error('[MedicineController.deleteMedicine]', error);
+      logger.error('[MedicineController.deleteMedicine]', error);
       res.status(500).json({ error: 'Internal server error.' });
     }
   };

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { logger } from '../../utils/logger.js';
 
 /**
  * connectDB — establishes a single Mongoose connection.
@@ -16,5 +17,5 @@ export async function connectDB(): Promise<void> {
     );
   }
   await mongoose.connect(uri);
-  console.log('✅  MongoDB connected');
+  logger.info('✅  MongoDB connected');
 }

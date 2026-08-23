@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import { logger } from '../utils/logger.js';
 import type { IUserRepository } from '../db/user.repository.js';
 
 export function requirePatientAccess(userRepository: IUserRepository) {
@@ -32,7 +33,7 @@ export function requirePatientAccess(userRepository: IUserRepository) {
 
       next();
     } catch (error) {
-      console.error('[requirePatientAccess] Error checking patient access:', error);
+      logger.error('[requirePatientAccess] Error checking patient access:', error);
       res.status(500).json({ error: 'Internal server error during authorization check.' });
     }
   };

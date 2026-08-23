@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express';
+import { logger } from '../utils/logger.js';
 import { MedicineLogsService, ValidationError } from './medicine-logs.service.js';
 
 export class MedicineLogsController {
-  constructor(private readonly medicineLogsService: MedicineLogsService) {}
+  constructor(private readonly medicineLogsService: MedicineLogsService) { }
 
   createLog = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -12,7 +13,7 @@ export class MedicineLogsController {
       if (error instanceof ValidationError) {
         res.status(400).json({ error: error.message });
       } else {
-        console.error('Create Medicine Log Error:', error);
+        logger.error('[MedicineLogsController.createLog] Create Medicine Log Error:', error);
         res.status(500).json({ error: 'Internal server error' });
       }
     }
@@ -29,7 +30,7 @@ export class MedicineLogsController {
       const logs = await this.medicineLogsService.getMedicineHistory(elderlyId, date);
       res.json({ logs });
     } catch (error) {
-      console.error('Get Medicine History Error:', error);
+      logger.error('[MedicineLogsController.getLogsByElderly] Get Medicine History Error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -48,7 +49,7 @@ export class MedicineLogsController {
       if (error instanceof ValidationError) {
         res.status(400).json({ error: error.message });
       } else {
-        console.error('Update Log Status Error:', error);
+        logger.error('[MedicineLogsController.updateLogStatus] Update Log Status Error:', error);
         res.status(500).json({ error: 'Internal server error' });
       }
     }
@@ -64,7 +65,7 @@ export class MedicineLogsController {
       const report = await this.medicineLogsService.generateReport(elderlyId, 'all');
       res.json(report);
     } catch (error) {
-      console.error('Get Medicine Report Error:', error);
+      logger.error('[MedicineLogsController.getReport] Get Medicine Report Error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -79,7 +80,7 @@ export class MedicineLogsController {
       const report = await this.medicineLogsService.generateReport(elderlyId, 'daily');
       res.json(report);
     } catch (error) {
-      console.error('Get Daily Report Error:', error);
+      logger.error('[MedicineLogsController.getDailyReport] Get Daily Report Error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -94,7 +95,7 @@ export class MedicineLogsController {
       const report = await this.medicineLogsService.generateReport(elderlyId, 'weekly');
       res.json(report);
     } catch (error) {
-      console.error('Get Weekly Report Error:', error);
+      logger.error('[MedicineLogsController.getWeeklyReport] Get Weekly Report Error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -109,7 +110,7 @@ export class MedicineLogsController {
       const report = await this.medicineLogsService.generateReport(elderlyId, 'monthly');
       res.json(report);
     } catch (error) {
-      console.error('Get Monthly Report Error:', error);
+      logger.error('[MedicineLogsController.getMonthlyReport] Get Monthly Report Error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };

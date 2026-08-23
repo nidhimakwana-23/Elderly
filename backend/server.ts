@@ -78,62 +78,62 @@ app.use(express.json());
 // ─── Dependency wiring ────────────────────────────────────────────────────────
 // This is the ONE place where concrete implementations are chosen.
 // To swap the storage layer, only change the repository instantiations below.
-const userRepository          = new MongooseUserRepository();
-const medicineRepository      = new MongooseMedicineRepository();
-const medicineLogsRepository  = new MongooseMedicineLogsRepository();
-const healthCheckRepository   = new MongooseHealthCheckRepository();
-const doctorRepository        = new MongooseDoctorRepository();
-const appointmentRepository   = new MongooseAppointmentRepository();
-const emergencyRepository     = new MongooseEmergencyRepository();
-const prescriptionRepository  = new MongoosePrescriptionRepository();
+const userRepository = new MongooseUserRepository();
+const medicineRepository = new MongooseMedicineRepository();
+const medicineLogsRepository = new MongooseMedicineLogsRepository();
+const healthCheckRepository = new MongooseHealthCheckRepository();
+const doctorRepository = new MongooseDoctorRepository();
+const appointmentRepository = new MongooseAppointmentRepository();
+const emergencyRepository = new MongooseEmergencyRepository();
+const prescriptionRepository = new MongoosePrescriptionRepository();
 
-const authService             = new AuthService(userRepository);
-const familyService           = new FamilyService(userRepository);
-const medicineService         = new MedicineService(medicineRepository);
-const medicineLogsService     = new MedicineLogsService(medicineLogsRepository);
-const healthCheckService      = new HealthCheckService(healthCheckRepository);
-const doctorService           = new DoctorService(doctorRepository);
-const appointmentService      = new AppointmentService(appointmentRepository, doctorRepository);
-const emergencyService        = new EmergencyService(emergencyRepository);
-const prescriptionService     = new PrescriptionService(prescriptionRepository);
-const healthTrendService      = new HealthTrendService(
+const authService = new AuthService(userRepository);
+const familyService = new FamilyService(userRepository);
+const medicineService = new MedicineService(medicineRepository);
+const medicineLogsService = new MedicineLogsService(medicineLogsRepository);
+const healthCheckService = new HealthCheckService(healthCheckRepository);
+const doctorService = new DoctorService(doctorRepository);
+const appointmentService = new AppointmentService(appointmentRepository, doctorRepository);
+const emergencyService = new EmergencyService(emergencyRepository);
+const prescriptionService = new PrescriptionService(prescriptionRepository);
+const healthTrendService = new HealthTrendService(
   healthCheckRepository,
   medicineLogsRepository,
   medicineRepository,
   prescriptionRepository,
   appointmentRepository,
 );
-const aiService               = new AiService(healthCheckService, medicineLogsService, medicineService);
+const aiService = new AiService(healthCheckService, medicineLogsService, medicineService);
 
-const authController          = new AuthController(authService);
-const familyController        = new FamilyController(familyService);
-const medicineController      = new MedicineController(medicineService);
-const medicineLogsController  = new MedicineLogsController(medicineLogsService);
-const healthCheckController   = new HealthCheckController(healthCheckService);
-const doctorController        = new DoctorController(doctorService);
-const appointmentController   = new AppointmentController(appointmentService, doctorService);
-const emergencyController     = new EmergencyController(emergencyService, doctorService);
-const prescriptionController  = new PrescriptionController(prescriptionService);
-const healthTrendController   = new HealthTrendController(healthTrendService);
-const aiController            = new AiController(aiService);
+const authController = new AuthController(authService);
+const familyController = new FamilyController(familyService);
+const medicineController = new MedicineController(medicineService);
+const medicineLogsController = new MedicineLogsController(medicineLogsService);
+const healthCheckController = new HealthCheckController(healthCheckService);
+const doctorController = new DoctorController(doctorService);
+const appointmentController = new AppointmentController(appointmentService, doctorService);
+const emergencyController = new EmergencyController(emergencyService, doctorService);
+const prescriptionController = new PrescriptionController(prescriptionService);
+const healthTrendController = new HealthTrendController(healthTrendService);
+const aiController = new AiController(aiService);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api', (_req: Request, res: Response) => {
   res.json({ message: 'Hello from Express Server with TypeScript!' });
 });
 
-app.use('/api/auth',            createAuthRouter(authController));
-app.use('/api/family',          createFamilyRouter(familyController));
-app.use('/api/medicines',       createMedicineRouter(medicineController, userRepository));
-app.use('/api/medicine-logs',   createMedicineLogsRouter(medicineLogsController, userRepository));
+app.use('/api/auth', createAuthRouter(authController));
+app.use('/api/family', createFamilyRouter(familyController));
+app.use('/api/medicines', createMedicineRouter(medicineController, userRepository));
+app.use('/api/medicine-logs', createMedicineLogsRouter(medicineLogsController, userRepository));
 app.use('/api/medicine-report', createMedicineReportRouter(medicineLogsController, userRepository));
-app.use('/api/health-checks',   createHealthCheckRouter(healthCheckController, userRepository));
-app.use('/api/doctors',         createDoctorRouter(doctorController));
-app.use('/api/appointments',    createAppointmentRouter(appointmentController));
-app.use('/api/emergency',       createEmergencyRouter(emergencyController));
-app.use('/api/prescriptions',   createPrescriptionRouter(prescriptionController));
-app.use('/api/health-trend',    createHealthTrendRouter(healthTrendController));
-app.use('/api/ai',              createAiRouter(aiController));
+app.use('/api/health-checks', createHealthCheckRouter(healthCheckController, userRepository));
+app.use('/api/doctors', createDoctorRouter(doctorController));
+app.use('/api/appointments', createAppointmentRouter(appointmentController));
+app.use('/api/emergency', createEmergencyRouter(emergencyController));
+app.use('/api/prescriptions', createPrescriptionRouter(prescriptionController));
+app.use('/api/health-trend', createHealthTrendRouter(healthTrendController));
+app.use('/api/ai', createAiRouter(aiController));
 
 // ─── OpenAPI / Scalar ─────────────────────────────────────────────────────────
 const swaggerOptions = {

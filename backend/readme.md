@@ -1,0 +1,14 @@
+Structure
+- prettier rc is used for file formatting
+- bacend is in backend folder
+- git ignore is used to mention ignored files
+- app starts with the server.ts file
+- family folder defines every API things of family, routes, services, controller, etc.
+    - .router.ts files defines routes
+    - .controller.ts files is used to return responses
+    - .service.ts files validates the db request, updates/inserts records using repository
+    - .repository.ts files have code to actually insert into db (doesn't include any sort of validation)
+    - .model.ts files define the db schema
+    - why is typescript
+    - why we didn't go for sql db as we already had to define types
+    - Can we insert different format of data into db? yes or no? why

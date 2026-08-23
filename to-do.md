@@ -19,3 +19,13 @@ To DO:
     - Caretaker module
 - USe openAPi generator to generate schema
 - THink of making scalable APIs
+
+
+
+Add:
+- Database Transaction.
+- Local AI Model
+- Soft Delete functionality. 
+- Proper Validations with Node Package if available. 
+- Auth Guards
+- Error Handling and Logging.

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, UserPlus, Heart, ChevronRight, ChevronLeft, Check, Plus, Trash2, AlertCircle } from 'lucide-react';
-import { useCreateFamilyMember } from '../hooks/family/useCreateFamilyMember';
+import { X, UserPlus, Heart, ChevronRight, ChevronLeft, Check, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { CreateFamilyProfileInput, EmergencyContactInput } from '../types/family-member';
+import { useCreateFamilyMember } from '../hooks/family/useCreateFamilyMember';
 
 interface AddFamilyMemberModalProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
   onSuccess,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Removed errorMsg state; using toast for notifications
 
   // Step 1 State
   const [fullName, setFullName] = useState('');
@@ -38,7 +39,6 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
 
   const resetForm = () => {
     setStep(1);
-    setErrorMsg(null);
     setFullName('');
     setBirthDate('');
     setEmail('');
@@ -85,22 +85,32 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
 
   // Step Nav & Validation
   const handleNext = () => {
-    setErrorMsg(null);
+    // No need to clear errorMsg; using toast
     if (step === 1) {
       if (!fullName.trim()) {
-        setErrorMsg('Full Name is required.');
+        toast.error('Full Name is required.');
         return;
       }
       if (!birthDate.trim()) {
-        setErrorMsg('Date of Birth is required.');
+        toast.error('Date of Birth is required.');
+        return;
+      }
+      // Validate age >= 18
+      const birth = new Date(birthDate);
+      const now = new Date();
+      const age = now.getFullYear() - birth.getFullYear() - ((now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) ? 1 : 0);
+      if (age < 45) {
+        toast.error('You must be at least 45 years old.');
         return;
       }
       if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setErrorMsg('A valid email address is required.');
+        toast.error('A valid email address is required.');
         return;
       }
-      if (!password || password.length < 8) {
-        setErrorMsg('Password must be at least 8 characters long.');
+      // Password complexity: >=8, uppercase, number, special character
+      const passwordValid = password && password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[\W_]/.test(password);
+      if (!passwordValid) {
+        toast.error('Password must be at least 8 characters, include an uppercase letter, a number, and a special character.');
         return;
       }
       setStep(2);
@@ -110,7 +120,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
   };
 
   const handleBack = () => {
-    setErrorMsg(null);
+    // No toast needed on back navigation
     if (step > 1) {
       setStep((prev) => (prev - 1) as 1 | 2 | 3);
     }
@@ -118,7 +128,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
+    // No need to reset error state; toast handles errors
 
     // Filter valid contacts
     const validContacts = contacts.filter((c) => c.name.trim() && c.phone.trim());
@@ -140,7 +150,7 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
       handleClose();
     } catch (err: any) {
       const msg = err.response?.data?.error || err.message || 'Failed to create family member profile.';
-      setErrorMsg(msg);
+      toast.error(msg);
     }
   };
 
@@ -192,13 +202,6 @@ export const AddFamilyMemberModal: React.FC<AddFamilyMemberModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6 flex-1">
-          {errorMsg && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl flex items-center gap-3 text-sm animate-in fade-in">
-              <AlertCircle size={18} className="shrink-0 text-red-500" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
           {/* STEP 1: Personal Info */}
           {step === 1 && (
             <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">

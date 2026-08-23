@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { AuthProvider } from './context/AuthContext'
 import { FamilyMemberProvider } from './context/FamilyMemberContext'
 import { queryClient } from './lib/queryClient'
+import { Toaster } from 'sonner'; 
 import './index.css'
 import App from './App.tsx'
 
@@ -12,6 +13,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <Toaster position="top-right" />
         <FamilyMemberProvider>
           <App />
         </FamilyMemberProvider>

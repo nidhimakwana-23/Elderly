@@ -1,22 +1,28 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { LlamaCpp } from 'node-llama-cpp';
 import type { HealthCheckService } from '../health-check/health-check.service.js';
 import type { MedicineLogsService } from '../medicine-logs/medicine-logs.service.js';
 import type { MedicineService } from '../medicine/medicine.service.js';
 import type { ChatMessage } from './ai.types.js';
 
 export class AiService {
-  private readonly genAI: GoogleGenerativeAI;
+  private readonly model: LlamaCpp;
 
   constructor(
     private readonly healthCheckService: HealthCheckService,
     private readonly medicineLogsService: MedicineLogsService,
     private readonly medicineService: MedicineService,
   ) {
-    const apiKey = process.env['GEMINI_API_KEY'];
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY environment variable is not set');
+    const modelPath = process.env['QWEN_MODEL_PATH'];
+    if (!modelPath) {
+      throw new Error('QWEN_MODEL_PATH environment variable is not set');
     }
-    this.genAI = new GoogleGenerativeAI(apiKey);
+    // Initialize Llama model with desired parameters
+    this.model = new LlamaCpp({
+      modelPath,
+      nCtx: 2048,
+      seed: 42,
+      // Additional parameters can be tuned as needed
+    });
   }
 
   /**
@@ -150,32 +156,23 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
   ): AsyncIterable<string> {
     const systemPrompt = await this.buildSystemPrompt(patientId);
 
-    const model = this.genAI.getGenerativeModel({
-      model: 'gemini-3.5-flash-lite',
-      systemInstruction: systemPrompt,
-    });
-
-    // Convert our message format to Gemini's format
-    // Gemini uses 'user' and 'model' roles; history MUST start with role 'user'
-    const rawHistory = messages.slice(0, -1).map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }));
-
-    // Skip any initial 'model' messages (e.g. initial UI welcome greeting)
-    const firstUserIndex = rawHistory.findIndex((h) => h.role === 'user');
-    const history = firstUserIndex !== -1 ? rawHistory.slice(firstUserIndex) : [];
-
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage) {
-      throw new Error('No messages provided');
+    // Build a full prompt for the local model, including system instruction and message history.
+    const promptLines: string[] = [];
+    // System prompt at the beginning
+    promptLines.push(systemPrompt);
+    // Append conversation history
+    for (const msg of messages) {
+      const roleLabel = msg.role === 'assistant' ? 'Assistant' : 'User';
+      promptLines.push(`${roleLabel}: ${msg.content}`);
     }
+    const fullPrompt = promptLines.join('\n');
 
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessageStream(lastMessage.content);
-
-    for await (const chunk of result.stream) {
-      const text = chunk.text();
+    // Use the Llama model to generate a streaming response.
+    const generator = this.model.generate(fullPrompt, { stream: true });
+    // The generate method returns an async iterator yielding text chunks.
+    for await (const chunk of generator) {
+      // Assuming each chunk is a string or has a .text property; handle both.
+      const text = typeof chunk === 'string' ? chunk : (chunk?.text ?? '');
       if (text) {
         yield text;
       }

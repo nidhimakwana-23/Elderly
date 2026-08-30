@@ -1,25 +1,27 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { HealthCheckService } from '../health-check/health-check.service';
-import type { MedicineLogsService } from '../medicine-logs/medicine-logs.service';
-import type { MedicineService } from '../medicine/medicine.service';
-import type { ChatMessage } from './ai.types';
 
 import { logger } from '../utils/logger';
+import { HealthCheckService } from '../health-check/health-check.service';
+import { MedicineLogsService } from '../medicine-logs/medicine-logs.service';
+import { MedicineService } from '../medicine/medicine.service';
+import { ChatMessage } from './ai.types';
+import { getLlama, LlamaChatSession } from 'node-llama-cpp';
 
 export class AiService {
   private readonly genAI: GoogleGenerativeAI | null = null;
+  private readonly modelPath: string;
 
   constructor(
     private readonly healthCheckService: HealthCheckService,
     private readonly medicineLogsService: MedicineLogsService,
     private readonly medicineService: MedicineService,
   ) {
-    const apiKey = process.env['GEMINI_API_KEY'];
-    if (!apiKey) {
-      logger.warn('⚠️  GEMINI_API_KEY is not set in environment. AI chat features will require GEMINI_API_KEY.');
-    } else {
-      this.genAI = new GoogleGenerativeAI(apiKey);
+    const modelPath = process.env['QWEN_MODEL_PATH'];
+    if (!modelPath) {
+      throw new Error('QWEN_MODEL_PATH environment variable is not set');
     }
+    this.modelPath = modelPath;
+    // No immediate model instantiation; session will be created on demand
   }
 
   /**
@@ -145,44 +147,42 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
   }
 
   /**
+   * Creates a LlamaChatSession with the loaded model.
+   */
+  private async createLlamaSession(): Promise<LlamaChatSession> {
+    const llama = await getLlama();
+    const model = await llama.loadModel({ modelPath: this.modelPath });
+    const context = await model.createContext();
+    return new LlamaChatSession({ contextSequence: context.getSequence() });
+  }
+
+
+  /**
    * Returns an async iterable of text chunks from Gemini.
    */
   async *streamChat(
     patientId: string,
     messages: ChatMessage[],
   ): AsyncIterable<string> {
-    if (!this.genAI) {
-      throw new Error('GEMINI_API_KEY environment variable is not set in backend .env file');
-    }
 
     const systemPrompt = await this.buildSystemPrompt(patientId);
 
-    const model = this.genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: systemPrompt,
-    });
-
-    // Convert our message format to Gemini's format
-    // Gemini uses 'user' and 'model' roles; history MUST start with role 'user'
-    const rawHistory = messages.slice(0, -1).map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }));
-
-    // Skip any initial 'model' messages (e.g. initial UI welcome greeting)
-    const firstUserIndex = rawHistory.findIndex((h) => h.role === 'user');
-    const history = firstUserIndex !== -1 ? rawHistory.slice(firstUserIndex) : [];
-
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage) {
-      throw new Error('No messages provided');
+    // Build a full prompt for the local model, including system instruction and message history.
+    const promptLines: string[] = [];
+    // System prompt at the beginning
+    promptLines.push(systemPrompt);
+    // Append conversation history
+    for (const msg of messages) {
+      const roleLabel = msg.role === 'assistant' ? 'Assistant' : 'User';
+      promptLines.push(`${roleLabel}: ${msg.content}`);
     }
+    const fullPrompt = promptLines.join('\n');
 
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessageStream(lastMessage.content);
-
-    for await (const chunk of result.stream) {
-      const text = chunk.text();
+    // Use Llama session for streaming response
+    const session = await this.createLlamaSession();
+    const stream = await session.prompt(fullPrompt);
+    for await (const chunk of stream) {
+      const text = typeof chunk === 'string' ? chunk : ((chunk as any).text ?? '');
       if (text) {
         yield text;
       }

@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import type { FamilyController } from './family.controller.js';
-import { requireAuth } from '../middleware/auth.middleware.js';
+import type { FamilyController } from './family.controller';
+import { requireAuth } from '../middleware/auth.middleware';
 
 export function createFamilyRouter(controller: FamilyController): Router {
   const router = Router();

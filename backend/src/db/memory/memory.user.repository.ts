@@ -1,7 +1,7 @@
-import type { User } from '../../auth/auth.types.js';
-import type { IUserRepository } from '../user.repository.js';
+import type { User } from '../../auth/auth.types';
+import type { IUserRepository } from '../user.repository';
 
-import type { FamilyProfile } from '../../family/family.types.js';
+import type { FamilyProfile } from '../../family/family.types';
 
 /**
  * MemoryUserRepository — stores users in a plain JavaScript Map.

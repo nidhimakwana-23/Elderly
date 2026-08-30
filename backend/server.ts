@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { logger } from './src/utils/logger.js';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
 import fs from 'fs';
@@ -8,66 +7,67 @@ import { fileURLToPath } from 'url';
 import { apiReference } from '@scalar/express-api-reference';
 import swaggerJsdoc from 'swagger-jsdoc';
 import { z } from 'zod';
-import { MedicineSchema, CreateMedicineDtoSchema, UpdateMedicineDtoSchema } from './src/medicine/medicine.types.js';
-import { FamilyProfileSchema, CreateFamilyProfileInputSchema } from './src/family/family.types.js';
-import { UserSchema, SignupInputSchema, LoginInputSchema, JwtPayloadSchema, DoctorSignupInputSchema } from './src/auth/auth.types.js';
-import { HealthCheckSchema, CreateHealthCheckDtoSchema, UpdateHealthCheckDtoSchema } from './src/health-check/health-check.types.js';
-import { DoctorProfileSchema, CreateDoctorProfileDtoSchema } from './src/doctor/doctor.types.js';
-import { AppointmentSchema, CreateAppointmentDtoSchema } from './src/appointment/appointment.types.js';
-import { EmergencyRequestSchema, CreateEmergencyDtoSchema } from './src/emergency/emergency.types.js';
-import { PrescriptionSchema, CreatePrescriptionDtoSchema } from './src/prescription/prescription.types.js';
+import { MedicineSchema, CreateMedicineDtoSchema, UpdateMedicineDtoSchema } from './src/medicine/medicine.types';
+import { FamilyProfileSchema, CreateFamilyProfileInputSchema } from './src/family/family.types';
+import { UserSchema, SignupInputSchema, LoginInputSchema, JwtPayloadSchema, DoctorSignupInputSchema } from './src/auth/auth.types';
+import { HealthCheckSchema, CreateHealthCheckDtoSchema, UpdateHealthCheckDtoSchema } from './src/health-check/health-check.types';
+import { DoctorProfileSchema, CreateDoctorProfileDtoSchema } from './src/doctor/doctor.types';
+import { AppointmentSchema, CreateAppointmentDtoSchema } from './src/appointment/appointment.types';
+import { EmergencyRequestSchema, CreateEmergencyDtoSchema } from './src/emergency/emergency.types';
+import { PrescriptionSchema, CreatePrescriptionDtoSchema } from './src/prescription/prescription.types';
 
 // ─── DB Connection ────────────────────────────────────────────────────────────
-import { connectDB } from './src/db/mongoose/connection.js';
+import { connectDB } from './src/db/mongoose/connection';
 
 // ─── Mongoose Repositories ────────────────────────────────────────────────────────────
-import { MongooseUserRepository } from './src/db/mongoose/mongoose.user.repository.js';
-import { MongooseMedicineRepository } from './src/db/mongoose/mongoose.medicine.repository.js';
-import { MongooseMedicineLogsRepository } from './src/db/mongoose/mongoose.medicine-logs.repository.js';
-import { MongooseHealthCheckRepository } from './src/db/mongoose/mongoose.health-check.repository.js';
-import { MongooseDoctorRepository } from './src/db/mongoose/mongoose.doctor.repository.js';
-import { MongooseAppointmentRepository } from './src/db/mongoose/mongoose.appointment.repository.js';
-import { MongooseEmergencyRepository } from './src/db/mongoose/mongoose.emergency.repository.js';
-import { MongoosePrescriptionRepository } from './src/db/mongoose/mongoose.prescription.repository.js';
+import { MongooseUserRepository } from './src/db/mongoose/mongoose.user.repository';
+import { MongooseMedicineRepository } from './src/db/mongoose/mongoose.medicine.repository';
+import { MongooseMedicineLogsRepository } from './src/db/mongoose/mongoose.medicine-logs.repository';
+import { MongooseHealthCheckRepository } from './src/db/mongoose/mongoose.health-check.repository';
+import { MongooseDoctorRepository } from './src/db/mongoose/mongoose.doctor.repository';
+import { MongooseAppointmentRepository } from './src/db/mongoose/mongoose.appointment.repository';
+import { MongooseEmergencyRepository } from './src/db/mongoose/mongoose.emergency.repository';
+import { MongoosePrescriptionRepository } from './src/db/mongoose/mongoose.prescription.repository';
 
 // ─── Services ──────────────────────────────────────────────────────────────────────────
-import { AuthService } from './src/auth/auth.service.js';
-import { FamilyService } from './src/family/family.service.js';
-import { MedicineService } from './src/medicine/medicine.service.js';
-import { MedicineLogsService } from './src/medicine-logs/medicine-logs.service.js';
-import { HealthCheckService } from './src/health-check/health-check.service.js';
-import { DoctorService } from './src/doctor/doctor.service.js';
-import { AppointmentService } from './src/appointment/appointment.service.js';
-import { EmergencyService } from './src/emergency/emergency.service.js';
-import { PrescriptionService } from './src/prescription/prescription.service.js';
-import { HealthTrendService } from './src/health-trend/health-trend.service.js';
+import { AuthService } from './src/auth/auth.service';
+import { FamilyService } from './src/family/family.service';
+import { MedicineService } from './src/medicine/medicine.service';
+import { MedicineLogsService } from './src/medicine-logs/medicine-logs.service';
+import { HealthCheckService } from './src/health-check/health-check.service';
+import { DoctorService } from './src/doctor/doctor.service';
+import { AppointmentService } from './src/appointment/appointment.service';
+import { EmergencyService } from './src/emergency/emergency.service';
+import { PrescriptionService } from './src/prescription/prescription.service';
+import { HealthTrendService } from './src/health-trend/health-trend.service';
 
 // ─── Controllers ──────────────────────────────────────────────────────────────────────────
-import { AuthController } from './src/auth/auth.controller.js';
-import { FamilyController } from './src/family/family.controller.js';
-import { MedicineController } from './src/medicine/medicine.controller.js';
-import { MedicineLogsController } from './src/medicine-logs/medicine-logs.controller.js';
-import { HealthCheckController } from './src/health-check/health-check.controller.js';
-import { DoctorController } from './src/doctor/doctor.controller.js';
-import { AppointmentController } from './src/appointment/appointment.controller.js';
-import { EmergencyController } from './src/emergency/emergency.controller.js';
-import { PrescriptionController } from './src/prescription/prescription.controller.js';
-import { HealthTrendController } from './src/health-trend/health-trend.controller.js';
+import { AuthController } from './src/auth/auth.controller';
+import { FamilyController } from './src/family/family.controller';
+import { MedicineController } from './src/medicine/medicine.controller';
+import { MedicineLogsController } from './src/medicine-logs/medicine-logs.controller';
+import { HealthCheckController } from './src/health-check/health-check.controller';
+import { DoctorController } from './src/doctor/doctor.controller';
+import { AppointmentController } from './src/appointment/appointment.controller';
+import { EmergencyController } from './src/emergency/emergency.controller';
+import { PrescriptionController } from './src/prescription/prescription.controller';
+import { HealthTrendController } from './src/health-trend/health-trend.controller';
 
 // ─── Routers ──────────────────────────────────────────────────────────────────────────
-import { createAuthRouter } from './src/auth/auth.router.js';
-import { createFamilyRouter } from './src/family/family.router.js';
-import { createMedicineRouter } from './src/medicine/medicine.router.js';
-import { createMedicineLogsRouter, createMedicineReportRouter } from './src/medicine-logs/medicine-logs.router.js';
-import { createHealthCheckRouter } from './src/health-check/health-check.router.js';
-import { createDoctorRouter } from './src/doctor/doctor.router.js';
-import { createAppointmentRouter } from './src/appointment/appointment.router.js';
-import { createEmergencyRouter } from './src/emergency/emergency.router.js';
-import { createPrescriptionRouter } from './src/prescription/prescription.router.js';
-import { createHealthTrendRouter } from './src/health-trend/health-trend.router.js';
-import { AiService } from './src/ai/ai.service.js';
-import { AiController } from './src/ai/ai.controller.js';
-import { createAiRouter } from './src/ai/ai.router.js';
+import { createAuthRouter } from './src/auth/auth.router';
+import { createFamilyRouter } from './src/family/family.router';
+import { createMedicineRouter } from './src/medicine/medicine.router';
+import { createMedicineLogsRouter, createMedicineReportRouter } from './src/medicine-logs/medicine-logs.router';
+import { createHealthCheckRouter } from './src/health-check/health-check.router';
+import { createDoctorRouter } from './src/doctor/doctor.router';
+import { createAppointmentRouter } from './src/appointment/appointment.router';
+import { createEmergencyRouter } from './src/emergency/emergency.router';
+import { createPrescriptionRouter } from './src/prescription/prescription.router';
+import { createHealthTrendRouter } from './src/health-trend/health-trend.router';
+import { AiService } from './src/ai/ai.service';
+import { AiController } from './src/ai/ai.controller';
+import { createAiRouter } from './src/ai/ai.router';
+import { logger } from './src/utils/logger';
 
 const app = express();
 const port = process.env['PORT'] ?? 3001;

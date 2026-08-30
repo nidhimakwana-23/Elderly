@@ -1,4 +1,4 @@
-import type { HealthCheck } from '../health-check/health-check.types.js';
+import type { HealthCheck } from '../health-check/health-check.types';
 
 export interface IHealthCheckRepository {
   create(healthCheck: HealthCheck): Promise<HealthCheck>;

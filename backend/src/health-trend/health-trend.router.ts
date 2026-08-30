@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import type { HealthTrendController } from './health-trend.controller.js';
-import { requireAuth, requireRole } from '../middleware/auth.middleware.js';
+import type { HealthTrendController } from './health-trend.controller';
+import { requireAuth, requireRole } from '../middleware/auth.middleware';
 
 export function createHealthTrendRouter(controller: HealthTrendController): Router {
   const router = Router();

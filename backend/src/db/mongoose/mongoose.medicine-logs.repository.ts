@@ -1,6 +1,6 @@
-import type { MedicineLog } from '../../medicine-logs/medicine-logs.types.js';
-import type { IMedicineLogsRepository } from '../medicine-logs.repository.js';
-import { MedicineLogModel } from './medicine-log.model.js';
+import type { MedicineLog } from '../../medicine-logs/medicine-logs.types';
+import type { IMedicineLogsRepository } from '../medicine-logs.repository';
+import { MedicineLogModel } from './medicine-log.model';
 
 /**
  * MongooseMedicineLogsRepository — persists MedicineLogs in MongoDB.

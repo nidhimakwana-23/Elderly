@@ -1,4 +1,4 @@
-import type { MedicineLog } from '../medicine-logs/medicine-logs.types.js';
+import type { MedicineLog } from '../medicine-logs/medicine-logs.types';
 
 export interface IMedicineLogsRepository {
   create(log: MedicineLog): Promise<MedicineLog>;

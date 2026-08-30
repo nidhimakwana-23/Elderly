@@ -1,6 +1,6 @@
-import type { IEmergencyRepository } from '../emergency.repository.js';
-import type { EmergencyRequest } from '../../emergency/emergency.types.js';
-import { EmergencyModel } from './emergency.model.js';
+import type { IEmergencyRepository } from '../emergency.repository';
+import type { EmergencyRequest } from '../../emergency/emergency.types';
+import { EmergencyModel } from './emergency.model';
 
 function toPlain(doc: any): EmergencyRequest {
   const obj = doc.toObject();

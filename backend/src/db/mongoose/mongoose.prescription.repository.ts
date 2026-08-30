@@ -1,6 +1,6 @@
-import type { IPrescriptionRepository } from '../prescription.repository.js';
-import type { Prescription } from '../../prescription/prescription.types.js';
-import { PrescriptionModel } from './prescription.model.js';
+import type { IPrescriptionRepository } from '../prescription.repository';
+import type { Prescription } from '../../prescription/prescription.types';
+import { PrescriptionModel } from './prescription.model';
 
 function toPlain(doc: any): Prescription {
   const obj = doc.toObject();

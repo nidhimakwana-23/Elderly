@@ -1,4 +1,4 @@
-import type { Medicine } from '../medicine/medicine.types.js';
+import type { Medicine } from '../medicine/medicine.types';
 
 export interface IMedicineRepository {
   create(medicine: Medicine): Promise<Medicine>;

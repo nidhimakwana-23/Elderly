@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { MedicineLog } from '../../medicine-logs/medicine-logs.types.js';
+import type { MedicineLog } from '../../medicine-logs/medicine-logs.types';
 
 /**
  * MedicineLogDocument — Mongoose document shape for a MedicineLog.

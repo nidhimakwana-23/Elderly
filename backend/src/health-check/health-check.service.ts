@@ -1,5 +1,5 @@
-import type { IHealthCheckRepository } from '../db/health-check.repository.js';
-import type { CreateHealthCheckDto, HealthCheck, UpdateHealthCheckDto } from './health-check.types.js';
+import type { IHealthCheckRepository } from '../db/health-check.repository';
+import type { CreateHealthCheckDto, HealthCheck, UpdateHealthCheckDto } from './health-check.types';
 import { randomUUID } from 'node:crypto';
 
 export class HealthCheckService {

@@ -1,4 +1,4 @@
-import type { Appointment } from '../appointment/appointment.types.js';
+import type { Appointment } from '../appointment/appointment.types';
 
 export interface IAppointmentRepository {
   create(appointment: Appointment): Promise<Appointment>;

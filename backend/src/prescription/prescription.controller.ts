@@ -3,11 +3,11 @@ import {
   PrescriptionService,
   NotFoundError,
   ForbiddenError,
-} from './prescription.service.js';
+} from './prescription.service';
 import {
   CreatePrescriptionDtoSchema,
   UpdatePrescriptionDtoSchema,
-} from './prescription.types.js';
+} from './prescription.types';
 
 export class PrescriptionController {
   constructor(private readonly prescriptionService: PrescriptionService) {

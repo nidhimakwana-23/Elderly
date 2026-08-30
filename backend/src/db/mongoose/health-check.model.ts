@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { HealthCheck } from '../../health-check/health-check.types.js';
+import type { HealthCheck } from '../../health-check/health-check.types';
 
 // Define the interface for the Document
 export interface IHealthCheckDocument extends Omit<HealthCheck, 'id'>, Document<string> {}

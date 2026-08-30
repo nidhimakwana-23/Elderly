@@ -4,9 +4,9 @@ import {
   NotFoundError,
   ForbiddenError,
   ConflictError,
-} from './emergency.service.js';
-import { CreateEmergencyDtoSchema } from './emergency.types.js';
-import { DoctorService } from '../doctor/doctor.service.js';
+} from './emergency.service';
+import { CreateEmergencyDtoSchema } from './emergency.types';
+import { DoctorService } from '../doctor/doctor.service';
 
 export class EmergencyController {
   constructor(

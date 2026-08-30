@@ -1,6 +1,6 @@
-import type { IAppointmentRepository } from '../appointment.repository.js';
-import type { Appointment } from '../../appointment/appointment.types.js';
-import { AppointmentModel } from './appointment.model.js';
+import type { IAppointmentRepository } from '../appointment.repository';
+import type { Appointment } from '../../appointment/appointment.types';
+import { AppointmentModel } from './appointment.model';
 
 function toPlain(doc: any): Appointment {
   const obj = doc.toObject();

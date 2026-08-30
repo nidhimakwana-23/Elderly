@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import type { AppointmentController } from './appointment.controller.js';
-import { requireAuth, requireRole } from '../middleware/auth.middleware.js';
+import type { AppointmentController } from './appointment.controller';
+import { requireAuth, requireRole } from '../middleware/auth.middleware';
 
 export function createAppointmentRouter(controller: AppointmentController): Router {
   const router = Router();

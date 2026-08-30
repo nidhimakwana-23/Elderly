@@ -1,11 +1,11 @@
 import type { Request, Response } from 'express';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger';
 import {
   AuthService,
   ConflictError,
   UnauthorizedError,
   ValidationError,
-} from './auth.service.js';
+} from './auth.service';
 
 export class AuthController {
   constructor(private readonly authService: AuthService) { }

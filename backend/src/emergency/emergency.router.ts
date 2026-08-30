@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import type { EmergencyController } from './emergency.controller.js';
-import { requireAuth, requireRole } from '../middleware/auth.middleware.js';
+import type { EmergencyController } from './emergency.controller';
+import { requireAuth, requireRole } from '../middleware/auth.middleware';
 
 export function createEmergencyRouter(controller: EmergencyController): Router {
   const router = Router();

@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { EmergencyRequest } from '../../emergency/emergency.types.js';
+import type { EmergencyRequest } from '../../emergency/emergency.types';
 
 export interface EmergencyDocument extends Omit<EmergencyRequest, 'id'>, Document {}
 

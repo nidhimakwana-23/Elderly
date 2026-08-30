@@ -1,6 +1,6 @@
-import type { Medicine } from '../../medicine/medicine.types.js';
-import type { IMedicineRepository } from '../medicine.repository.js';
-import { MedicineModel } from './medicine.model.js';
+import type { Medicine } from '../../medicine/medicine.types';
+import type { IMedicineRepository } from '../medicine.repository';
+import { MedicineModel } from './medicine.model';
 
 /**
  * MongooseMedicineRepository — persists Medicines in MongoDB.

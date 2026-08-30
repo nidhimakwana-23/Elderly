@@ -1,5 +1,5 @@
-import type { IMedicineRepository } from '../db/medicine.repository.js';
-import type { CreateMedicineDto, Medicine, UpdateMedicineDto } from './medicine.types.js';
+import type { IMedicineRepository } from '../db/medicine.repository';
+import type { CreateMedicineDto, Medicine, UpdateMedicineDto } from './medicine.types';
 import { randomUUID } from 'node:crypto';
 
 export class MedicineService {

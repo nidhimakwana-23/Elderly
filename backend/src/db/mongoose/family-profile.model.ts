@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { FamilyProfile } from '../../family/family.types.js';
+import type { FamilyProfile } from '../../family/family.types';
 
 /**
  * FamilyProfileDocument — Mongoose document shape for a FamilyProfile.

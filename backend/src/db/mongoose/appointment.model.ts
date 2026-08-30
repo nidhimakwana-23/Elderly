@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { Appointment } from '../../appointment/appointment.types.js';
+import type { Appointment } from '../../appointment/appointment.types';
 
 export interface AppointmentDocument extends Omit<Appointment, 'id'>, Document {}
 

@@ -1,6 +1,6 @@
-import type { IHealthCheckRepository } from '../health-check.repository.js';
-import type { HealthCheck } from '../../health-check/health-check.types.js';
-import { HealthCheckModel } from './health-check.model.js';
+import type { IHealthCheckRepository } from '../health-check.repository';
+import type { HealthCheck } from '../../health-check/health-check.types';
+import { HealthCheckModel } from './health-check.model';
 
 export class MongooseHealthCheckRepository implements IHealthCheckRepository {
   async create(healthCheck: HealthCheck): Promise<HealthCheck> {

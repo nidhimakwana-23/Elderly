@@ -4,18 +4,18 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
-import { UserModel } from '../src/db/mongoose/user.model.js';
-import { FamilyProfileModel } from '../src/db/mongoose/family-profile.model.js';
-import { DoctorProfileModel } from '../src/db/mongoose/doctor-profile.model.js';
-import { MedicineModel } from '../src/db/mongoose/medicine.model.js';
-import { MedicineLogModel } from '../src/db/mongoose/medicine-log.model.js';
-import { HealthCheckModel } from '../src/db/mongoose/health-check.model.js';
+import { UserModel } from '../src/db/mongoose/user.model';
+import { FamilyProfileModel } from '../src/db/mongoose/family-profile.model';
+import { DoctorProfileModel } from '../src/db/mongoose/doctor-profile.model';
+import { MedicineModel } from '../src/db/mongoose/medicine.model';
+import { MedicineLogModel } from '../src/db/mongoose/medicine-log.model';
+import { HealthCheckModel } from '../src/db/mongoose/health-check.model';
 
-import type { User } from '../src/auth/auth.types.js';
-import type { FamilyProfile } from '../src/family/family.types.js';
-import type { DoctorProfile } from '../src/doctor/doctor.types.js';
-import type { Medicine } from '../src/medicine/medicine.types.js';
-import type { MedicineLog } from '../src/medicine-logs/medicine-logs.types.js';
+import type { User } from '../src/auth/auth.types';
+import type { FamilyProfile } from '../src/family/family.types';
+import type { DoctorProfile } from '../src/doctor/doctor.types';
+import type { Medicine } from '../src/medicine/medicine.types';
+import type { MedicineLog } from '../src/medicine-logs/medicine-logs.types';
 
 interface HealthCheckSeed {
   _id: string;

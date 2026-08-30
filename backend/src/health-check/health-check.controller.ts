@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import type { HealthCheckService } from './health-check.service.js';
-import { CreateHealthCheckDtoSchema, UpdateHealthCheckDtoSchema } from './health-check.types.js';
+import type { HealthCheckService } from './health-check.service';
+import { CreateHealthCheckDtoSchema, UpdateHealthCheckDtoSchema } from './health-check.types';
 
 export class HealthCheckController {
   constructor(private readonly healthCheckService: HealthCheckService) {

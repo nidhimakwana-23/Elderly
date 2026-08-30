@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
-import type { IUserRepository } from '../db/user.repository.js';
-import type { LoginInput, SignupInput, DoctorSignupInput } from './auth.types.js';
+import type { IUserRepository } from '../db/user.repository';
+import type { LoginInput, SignupInput, DoctorSignupInput } from './auth.types';
 
 // Number of salt rounds for bcrypt — higher is more secure but slower.
 // 10 is the standard for most applications.

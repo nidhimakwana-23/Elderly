@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import type { PrescriptionController } from './prescription.controller.js';
-import { requireAuth, requireRole } from '../middleware/auth.middleware.js';
+import type { PrescriptionController } from './prescription.controller';
+import { requireAuth, requireRole } from '../middleware/auth.middleware';
 
 export function createPrescriptionRouter(controller: PrescriptionController): Router {
   const router = Router();

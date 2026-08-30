@@ -1,11 +1,13 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { HealthCheckService } from '../health-check/health-check.service.js';
-import type { MedicineLogsService } from '../medicine-logs/medicine-logs.service.js';
-import type { MedicineService } from '../medicine/medicine.service.js';
-import type { ChatMessage } from './ai.types.js';
+import type { HealthCheckService } from '../health-check/health-check.service';
+import type { MedicineLogsService } from '../medicine-logs/medicine-logs.service';
+import type { MedicineService } from '../medicine/medicine.service';
+import type { ChatMessage } from './ai.types';
+
+import { logger } from '../utils/logger';
 
 export class AiService {
-  private readonly genAI: GoogleGenerativeAI;
+  private readonly genAI: GoogleGenerativeAI | null = null;
 
   constructor(
     private readonly healthCheckService: HealthCheckService,
@@ -14,9 +16,10 @@ export class AiService {
   ) {
     const apiKey = process.env['GEMINI_API_KEY'];
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY environment variable is not set');
+      logger.warn('⚠️  GEMINI_API_KEY is not set in environment. AI chat features will require GEMINI_API_KEY.');
+    } else {
+      this.genAI = new GoogleGenerativeAI(apiKey);
     }
-    this.genAI = new GoogleGenerativeAI(apiKey);
   }
 
   /**
@@ -148,10 +151,14 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
     patientId: string,
     messages: ChatMessage[],
   ): AsyncIterable<string> {
+    if (!this.genAI) {
+      throw new Error('GEMINI_API_KEY environment variable is not set in backend .env file');
+    }
+
     const systemPrompt = await this.buildSystemPrompt(patientId);
 
     const model = this.genAI.getGenerativeModel({
-      model: 'gemini-3.5-flash-lite',
+      model: 'gemini-1.5-flash',
       systemInstruction: systemPrompt,
     });
 

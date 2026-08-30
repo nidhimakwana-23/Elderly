@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import type { IPrescriptionRepository } from '../db/prescription.repository.js';
+import type { IPrescriptionRepository } from '../db/prescription.repository';
 import type {
   CreatePrescriptionDto,
   Prescription,
   UpdatePrescriptionDto,
-} from './prescription.types.js';
+} from './prescription.types';
 
 export class NotFoundError extends Error {
   constructor(msg = 'Not found.') { super(msg); this.name = 'NotFoundError'; }

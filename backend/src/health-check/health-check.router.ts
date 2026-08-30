@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import type { HealthCheckController } from './health-check.controller.js';
-import { requireAuth } from '../middleware/auth.middleware.js';
-import { requirePatientAccess } from '../middleware/patient-access.middleware.js';
-import type { IUserRepository } from '../db/user.repository.js';
+import type { HealthCheckController } from './health-check.controller';
+import { requireAuth } from '../middleware/auth.middleware';
+import { requirePatientAccess } from '../middleware/patient-access.middleware';
+import type { IUserRepository } from '../db/user.repository';
 
 export function createHealthCheckRouter(
   healthCheckController: HealthCheckController,

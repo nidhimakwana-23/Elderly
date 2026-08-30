@@ -66,8 +66,9 @@ export class PrescriptionService {
   }
 
   /**
-   * Doctor deletes a prescription.
+   * Doctor soft-deletes a prescription.
    * Enforces ownership: only the authoring doctor can delete.
+   * Sets deleted_at; the record is retained in MongoDB for audit purposes.
    */
   async deletePrescription(id: string, requestingDoctorId: string): Promise<void> {
     const prescription = await this.repo.findById(id);
@@ -75,6 +76,6 @@ export class PrescriptionService {
     if (prescription.doctor_id !== requestingDoctorId) {
       throw new ForbiddenError('You can only delete prescriptions that you authored.');
     }
-    await this.repo.delete(id);
+    await this.repo.softDelete(id);
   }
 }

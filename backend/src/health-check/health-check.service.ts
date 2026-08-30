@@ -28,6 +28,6 @@ export class HealthCheckService {
   }
 
   async deleteHealthCheck(id: string): Promise<boolean> {
-    return this.repo.delete(id);
+    return this.repo.softDelete(id);
   }
 }

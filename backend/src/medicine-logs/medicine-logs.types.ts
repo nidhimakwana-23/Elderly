@@ -13,6 +13,8 @@ export interface MedicineLog {
   remarks?: string;
   createdAt: string;
   updatedAt: string;
+  /** ISO datetime set when the log is soft-deleted; absent on active records. */
+  deleted_at?: string;
 }
 
 export type CreateMedicineLogDto = Omit<MedicineLog, 'id' | 'createdAt' | 'updatedAt' | 'takenTime'> & { takenTime?: string | null };

@@ -1,5 +1,3 @@
-import { LlamaCpp } from 'node-llama-cpp';
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { logger } from '../utils/logger';
@@ -7,10 +5,11 @@ import { HealthCheckService } from '../health-check/health-check.service';
 import { MedicineLogsService } from '../medicine-logs/medicine-logs.service';
 import { MedicineService } from '../medicine/medicine.service';
 import { ChatMessage } from './ai.types';
+import { getLlama, LlamaChatSession } from 'node-llama-cpp';
 
 export class AiService {
   private readonly genAI: GoogleGenerativeAI | null = null;
-  private readonly model: LlamaCpp;
+  private readonly modelPath: string;
 
   constructor(
     private readonly healthCheckService: HealthCheckService,
@@ -21,13 +20,8 @@ export class AiService {
     if (!modelPath) {
       throw new Error('QWEN_MODEL_PATH environment variable is not set');
     }
-    // Initialize Llama model with desired parameters
-    this.model = new LlamaCpp({
-      modelPath,
-      nCtx: 2048,
-      seed: 42,
-      // Additional parameters can be tuned as needed
-    });
+    this.modelPath = modelPath;
+    // No immediate model instantiation; session will be created on demand
   }
 
   /**
@@ -153,15 +147,23 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
   }
 
   /**
+   * Creates a LlamaChatSession with the loaded model.
+   */
+  private async createLlamaSession(): Promise<LlamaChatSession> {
+    const llama = await getLlama();
+    const model = await llama.loadModel({ modelPath: this.modelPath });
+    const context = await model.createContext();
+    return new LlamaChatSession({ contextSequence: context.getSequence() });
+  }
+
+
+  /**
    * Returns an async iterable of text chunks from Gemini.
    */
   async *streamChat(
     patientId: string,
     messages: ChatMessage[],
   ): AsyncIterable<string> {
-    if (!this.genAI) {
-      throw new Error('GEMINI_API_KEY environment variable is not set in backend .env file');
-    }
 
     const systemPrompt = await this.buildSystemPrompt(patientId);
 
@@ -176,12 +178,11 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
     }
     const fullPrompt = promptLines.join('\n');
 
-    // Use the Llama model to generate a streaming response.
-    const generator = this.model.generate(fullPrompt, { stream: true });
-    // The generate method returns an async iterator yielding text chunks.
-    for await (const chunk of generator) {
-      // Assuming each chunk is a string or has a .text property; handle both.
-      const text = typeof chunk === 'string' ? chunk : (chunk?.text ?? '');
+    // Use Llama session for streaming response
+    const session = await this.createLlamaSession();
+    const stream = await session.prompt(fullPrompt);
+    for await (const chunk of stream) {
+      const text = typeof chunk === 'string' ? chunk : ((chunk as any).text ?? '');
       if (text) {
         yield text;
       }

@@ -1,6 +1,7 @@
 import type { IEmergencyRepository } from '../emergency.repository.js';
 import type { EmergencyRequest } from '../../emergency/emergency.types.js';
 import { EmergencyModel } from './emergency.model.js';
+import { ACTIVE_FILTER } from './soft-delete.js';
 
 function toPlain(doc: any): EmergencyRequest {
   const obj = doc.toObject();
@@ -15,6 +16,7 @@ function toPlain(doc: any): EmergencyRequest {
     resolved_at:           obj.resolved_at,
     created_at:            obj.created_at,
     updated_at:            obj.updated_at,
+    deleted_at:            obj.deleted_at ?? undefined,
   };
 }
 
@@ -24,11 +26,13 @@ export class MongooseEmergencyRepository implements IEmergencyRepository {
     return toPlain(doc);
   }
 
+  /** Returns an emergency request only if it has NOT been soft-deleted. */
   async findById(id: string): Promise<EmergencyRequest | undefined> {
-    const doc = await EmergencyModel.findOne({ id });
+    const doc = await EmergencyModel.findOne({ id, ...ACTIVE_FILTER });
     return doc ? toPlain(doc) : undefined;
   }
 
+  /** Returns open, non-deleted emergency requests within the given radius. */
   async findOpenNearby(
     longitude: number,
     latitude: number,
@@ -36,6 +40,7 @@ export class MongooseEmergencyRepository implements IEmergencyRepository {
   ): Promise<EmergencyRequest[]> {
     const docs = await EmergencyModel.find({
       status: 'open',
+      ...ACTIVE_FILTER,
       location: {
         $nearSphere: {
           $geometry: { type: 'Point', coordinates: [longitude, latitude] },
@@ -46,8 +51,11 @@ export class MongooseEmergencyRepository implements IEmergencyRepository {
     return docs.map(toPlain);
   }
 
+  /** Returns only active (non-deleted) emergency requests for the given patient. */
   async findByPatientId(patient_id: string): Promise<EmergencyRequest[]> {
-    const docs = await EmergencyModel.find({ patient_id }).sort({ created_at: -1 });
+    const docs = await EmergencyModel
+      .find({ patient_id, ...ACTIVE_FILTER })
+      .sort({ created_at: -1 });
     return docs.map(toPlain);
   }
 
@@ -57,9 +65,9 @@ export class MongooseEmergencyRepository implements IEmergencyRepository {
     extra: Partial<EmergencyRequest> = {},
   ): Promise<EmergencyRequest | undefined> {
     const doc = await EmergencyModel.findOneAndUpdate(
-      { id },
+      { id, ...ACTIVE_FILTER },
       { status, ...extra, updated_at: new Date().toISOString() },
-      { new: true }
+      { new: true },
     );
     return doc ? toPlain(doc) : undefined;
   }

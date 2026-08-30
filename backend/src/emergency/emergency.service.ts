@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { IEmergencyRepository } from '../db/emergency.repository.js';
-import type { CreateEmergencyDto, EmergencyRequest } from './emergency.types.js';
+import type { IEmergencyRepository } from '../db/emergency.repository';
+import type { CreateEmergencyDto, EmergencyRequest } from './emergency.types';
 
 export class NotFoundError extends Error {
   constructor(msg = 'Not found.') { super(msg); this.name = 'NotFoundError'; }

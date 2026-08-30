@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
-import type { IMedicineLogsRepository } from '../db/medicine-logs.repository.js';
-import type { CreateMedicineLogDto, MedicineLog, MedicineReportSummary } from './medicine-logs.types.js';
+import type { IMedicineLogsRepository } from '../db/medicine-logs.repository';
+import type { CreateMedicineLogDto, MedicineLog, MedicineReportSummary } from './medicine-logs.types';
 
 export class ValidationError extends Error {
   constructor(message: string) {

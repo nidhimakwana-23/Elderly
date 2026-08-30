@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { DoctorService, NotFoundError, ConflictError } from './doctor.service.js';
-import { CreateDoctorProfileDtoSchema, UpdateAvailabilityDtoSchema, UpdateDoctorProfileDtoSchema } from './doctor.types.js';
+import { DoctorService, NotFoundError, ConflictError } from './doctor.service';
+import { CreateDoctorProfileDtoSchema, UpdateAvailabilityDtoSchema, UpdateDoctorProfileDtoSchema } from './doctor.types';
 
 export class DoctorController {
   constructor(private readonly doctorService: DoctorService) {

@@ -1,4 +1,4 @@
-import type { DoctorProfile, UpdateAvailabilityDto } from '../doctor/doctor.types.js';
+import type { DoctorProfile, UpdateAvailabilityDto } from '../doctor/doctor.types';
 
 /**
  * IDoctorRepository — contract for all doctor profile storage implementations.

@@ -28,6 +28,8 @@ export const MedicineSchema = z.object({
   status: z.enum(['Active', 'Completed', 'Upcoming', 'Expired']),
   created_at: z.string(),
   updated_at: z.string(),
+  /** ISO datetime set when the medicine is soft-deleted; absent on active records. */
+  deleted_at: z.string().optional(),
 });
 
 export type Medicine = z.infer<typeof MedicineSchema>;

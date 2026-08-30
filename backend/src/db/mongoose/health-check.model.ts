@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { HealthCheck } from '../../health-check/health-check.types.js';
+import type { HealthCheck } from '../../health-check/health-check.types';
 
 // Define the interface for the Document
 export interface IHealthCheckDocument extends Omit<HealthCheck, 'id'>, Document<string> {}
@@ -19,6 +19,8 @@ const HealthCheckSchema = new Schema<IHealthCheckDocument>(
     notes: { type: String, required: false },
     created_at: { type: String, required: true },
     updated_at: { type: String, required: true },
+    /** Soft-delete timestamp. Null/absent means the record is active. */
+    deleted_at: { type: String, default: null, index: { sparse: true } },
   },
   {
     timestamps: false, // We handle created_at/updated_at manually as ISO strings

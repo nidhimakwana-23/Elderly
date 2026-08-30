@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import type { IAppointmentRepository } from '../db/appointment.repository.js';
-import type { IDoctorRepository } from '../db/doctor.repository.js';
+import type { IAppointmentRepository } from '../db/appointment.repository';
+import type { IDoctorRepository } from '../db/doctor.repository';
 import type {
   Appointment,
   CreateAppointmentDto,
-} from './appointment.types.js';
+} from './appointment.types';
 
 export class NotFoundError extends Error {
   constructor(message = 'Resource not found.') { super(message); this.name = 'NotFoundError'; }

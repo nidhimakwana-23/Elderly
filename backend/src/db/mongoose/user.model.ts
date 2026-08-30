@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { User } from '../../auth/auth.types.js';
+import type { User } from '../../auth/auth.types';
 
 /**
  * UserDocument — Mongoose document shape for a User.

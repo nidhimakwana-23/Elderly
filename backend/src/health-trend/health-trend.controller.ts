@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { HealthTrendService } from './health-trend.service.js';
+import type { HealthTrendService } from './health-trend.service';
 
 export class HealthTrendController {
   constructor(private readonly healthTrendService: HealthTrendService) {

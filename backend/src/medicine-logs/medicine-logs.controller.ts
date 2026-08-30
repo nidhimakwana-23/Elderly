@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { logger } from '../utils/logger.js';
-import { MedicineLogsService, ValidationError } from './medicine-logs.service.js';
+import { logger } from '../utils/logger';
+import { MedicineLogsService, ValidationError } from './medicine-logs.service';
 
 export class MedicineLogsController {
   constructor(private readonly medicineLogsService: MedicineLogsService) { }

@@ -1,8 +1,8 @@
-import type { User } from '../../auth/auth.types.js';
-import type { FamilyProfile } from '../../family/family.types.js';
-import type { IUserRepository } from '../user.repository.js';
-import { UserModel } from './user.model.js';
-import { FamilyProfileModel } from './family-profile.model.js';
+import type { User } from '../../auth/auth.types';
+import type { FamilyProfile } from '../../family/family.types';
+import type { IUserRepository } from '../user.repository';
+import { UserModel } from './user.model';
+import { FamilyProfileModel } from './family-profile.model';
 
 /**
  * MongooseUserRepository — persists Users and FamilyProfiles in MongoDB.

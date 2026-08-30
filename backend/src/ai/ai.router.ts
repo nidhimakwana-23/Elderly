@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import type { AiController } from './ai.controller.js';
+import type { AiController } from './ai.controller';
 
 export function createAiRouter(aiController: AiController): Router {
   const router = Router();

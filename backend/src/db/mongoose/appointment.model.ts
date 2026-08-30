@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { Appointment } from '../../appointment/appointment.types.js';
+import type { Appointment } from '../../appointment/appointment.types';
 
 export interface AppointmentDocument extends Omit<Appointment, 'id'>, Document {}
 
@@ -15,6 +15,8 @@ const AppointmentSchema = new Schema(
     notes:             { type: String },
     created_at:        { type: String, required: true },
     updated_at:        { type: String, required: true },
+    /** Soft-delete timestamp. Null/absent means the record is active. */
+    deleted_at:        { type: String, default: null, index: { sparse: true } },
   },
   { timestamps: false, versionKey: false }
 );

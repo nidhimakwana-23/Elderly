@@ -1,6 +1,6 @@
-import type { IDoctorRepository } from '../doctor.repository.js';
-import type { DoctorProfile, UpdateAvailabilityDto } from '../../doctor/doctor.types.js';
-import { DoctorProfileModel } from './doctor-profile.model.js';
+import type { IDoctorRepository } from '../doctor.repository';
+import type { DoctorProfile, UpdateAvailabilityDto } from '../../doctor/doctor.types';
+import { DoctorProfileModel } from './doctor-profile.model';
 
 function toPlain(doc: any): DoctorProfile {
   const obj = doc.toObject();

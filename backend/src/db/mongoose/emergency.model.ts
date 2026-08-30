@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { EmergencyRequest } from '../../emergency/emergency.types.js';
+import type { EmergencyRequest } from '../../emergency/emergency.types';
 
 export interface EmergencyDocument extends Omit<EmergencyRequest, 'id'>, Document {}
 
@@ -26,6 +26,8 @@ const EmergencySchema = new Schema(
     resolved_at:           { type: String },
     created_at:            { type: String, required: true },
     updated_at:            { type: String, required: true },
+    /** Soft-delete timestamp. Null/absent means the record is active. */
+    deleted_at:            { type: String, default: null, index: { sparse: true } },
   },
   { timestamps: false, versionKey: false }
 );

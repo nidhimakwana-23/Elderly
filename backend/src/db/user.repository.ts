@@ -1,6 +1,6 @@
-import type { User } from '../auth/auth.types.js';
+import type { User } from '../auth/auth.types';
 
-import type { FamilyProfile } from '../family/family.types.js';
+import type { FamilyProfile } from '../family/family.types';
 
 /**
  * IUserRepository — the contract for all user storage implementations.

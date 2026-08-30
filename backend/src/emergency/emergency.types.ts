@@ -15,6 +15,8 @@ export const EmergencyRequestSchema = z.object({
   resolved_at: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
+  /** ISO datetime set when the emergency record is soft-deleted; absent on active records. */
+  deleted_at: z.string().optional(),
 });
 
 export type EmergencyRequest = z.infer<typeof EmergencyRequestSchema>;

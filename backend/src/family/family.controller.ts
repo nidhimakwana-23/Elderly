@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { logger } from '../utils/logger.js';
-import { FamilyService, ValidationError, ConflictError } from './family.service.js';
+import { logger } from '../utils/logger';
+import { FamilyService, ValidationError, ConflictError } from './family.service';
 
 export class FamilyController {
   constructor(private readonly familyService: FamilyService) { }

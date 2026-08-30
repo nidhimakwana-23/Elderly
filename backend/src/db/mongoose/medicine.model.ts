@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { Medicine } from '../../medicine/medicine.types.js';
+import type { Medicine } from '../../medicine/medicine.types';
 
 /**
  * MedicineDocument — Mongoose document shape for a Medicine.
@@ -42,6 +42,8 @@ const MedicineSchema = new Schema(
     },
     created_at: { type: String, required: true },
     updated_at: { type: String, required: true },
+    /** Soft-delete timestamp. Null/absent means the record is active. */
+    deleted_at: { type: String, default: null, index: { sparse: true } },
   },
   {
     timestamps: false,

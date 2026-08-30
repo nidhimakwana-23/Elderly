@@ -1,9 +1,9 @@
-import type { IMedicineRepository } from '../db/medicine.repository.js';
-import type { CreateMedicineDto, Medicine, UpdateMedicineDto } from './medicine.types.js';
+import type { IMedicineRepository } from '../db/medicine.repository';
+import type { CreateMedicineDto, Medicine, UpdateMedicineDto } from './medicine.types';
 import { randomUUID } from 'node:crypto';
 
 export class MedicineService {
-  constructor(private readonly repo: IMedicineRepository) {}
+  constructor(private readonly repo: IMedicineRepository) { }
 
   async createMedicine(patient_id: string, dto: CreateMedicineDto): Promise<Medicine> {
     const medicine: Medicine = {
@@ -29,6 +29,6 @@ export class MedicineService {
   }
 
   async deleteMedicine(id: string): Promise<boolean> {
-    return this.repo.delete(id);
+    return this.repo.softDelete(id);
   }
 }

@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { MedicineLog } from '../../medicine-logs/medicine-logs.types.js';
+import type { MedicineLog } from '../../medicine-logs/medicine-logs.types';
 
 /**
  * MedicineLogDocument — Mongoose document shape for a MedicineLog.
@@ -32,6 +32,8 @@ const MedicineLogSchema = new Schema(
     remarks:   { type: String },
     createdAt: { type: String, required: true },
     updatedAt: { type: String, required: true },
+    /** Soft-delete timestamp. Null/absent means the record is active. */
+    deleted_at: { type: String, default: null, index: { sparse: true } },
   },
   {
     timestamps: false,

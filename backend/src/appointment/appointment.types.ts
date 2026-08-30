@@ -11,6 +11,8 @@ export const AppointmentSchema = z.object({
   notes: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
+  /** ISO datetime set when the appointment is soft-deleted; absent on active records. */
+  deleted_at: z.string().optional(),
 });
 
 export type Appointment = z.infer<typeof AppointmentSchema>;

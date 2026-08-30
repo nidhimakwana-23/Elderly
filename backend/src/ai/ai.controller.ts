@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import type { AiService } from './ai.service.js';
-import { AiChatRequestSchema } from './ai.types.js';
+import type { AiService } from './ai.service';
+import { AiChatRequestSchema } from './ai.types';
 
 export class AiController {
   constructor(private readonly aiService: AiService) {

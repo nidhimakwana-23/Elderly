@@ -3,7 +3,7 @@
  *
  * Provides coloured, levelled console output with ISO timestamps.
  * Usage:
- *   import { logger } from '../../utils/logger.js';
+ *   import { logger } from '../../utils/logger';
  *   logger.info('Server started');
  *   logger.error('Something broke', err);
  */

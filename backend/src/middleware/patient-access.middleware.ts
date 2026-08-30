@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { logger } from '../utils/logger.js';
-import type { IUserRepository } from '../db/user.repository.js';
+import { logger } from '../utils/logger';
+import type { IUserRepository } from '../db/user.repository';
 
 export function requirePatientAccess(userRepository: IUserRepository) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {

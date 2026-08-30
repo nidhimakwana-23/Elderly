@@ -1,9 +1,9 @@
-import type { IHealthCheckRepository } from '../db/health-check.repository.js';
-import type { IMedicineLogsRepository } from '../db/medicine-logs.repository.js';
-import type { IMedicineRepository } from '../db/medicine.repository.js';
-import type { IPrescriptionRepository } from '../db/prescription.repository.js';
-import type { IAppointmentRepository } from '../db/appointment.repository.js';
-import type { HealthCheck } from '../health-check/health-check.types.js';
+import type { IHealthCheckRepository } from '../db/health-check.repository';
+import type { IMedicineLogsRepository } from '../db/medicine-logs.repository';
+import type { IMedicineRepository } from '../db/medicine.repository';
+import type { IPrescriptionRepository } from '../db/prescription.repository';
+import type { IAppointmentRepository } from '../db/appointment.repository';
+import type { HealthCheck } from '../health-check/health-check.types';
 
 export interface PatientHealthSummary {
   patient_id: string;

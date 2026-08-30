@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
-import type { IUserRepository } from '../db/user.repository.js';
-import type { CreateFamilyProfileInput, FamilyProfile } from './family.types.js';
+import type { IUserRepository } from '../db/user.repository';
+import type { CreateFamilyProfileInput, FamilyProfile } from './family.types';
 
 const SALT_ROUNDS = 10;
 

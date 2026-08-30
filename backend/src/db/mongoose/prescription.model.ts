@@ -1,7 +1,8 @@
 import mongoose, { Schema, type Document } from 'mongoose';
-import type { Prescription } from '../../prescription/prescription.types.js';
+import type { Prescription } from '../../prescription/prescription.types';
 
 export interface PrescriptionDocument extends Omit<Prescription, 'id'>, Document {}
+
 
 const MedicationItemSubSchema = new Schema(
   {
@@ -27,6 +28,8 @@ const PrescriptionSchema = new Schema(
     valid_until:    { type: String },
     created_at:     { type: String, required: true },
     updated_at:     { type: String, required: true },
+    /** Soft-delete timestamp. Null/absent means the record is active. */
+    deleted_at:     { type: String, default: null, index: { sparse: true } },
   },
   { timestamps: false, versionKey: false }
 );

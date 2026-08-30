@@ -4,12 +4,12 @@ import {
   NotFoundError,
   ForbiddenError,
   ValidationError,
-} from './appointment.service.js';
+} from './appointment.service';
 import {
   CreateAppointmentDtoSchema,
   UpdateAppointmentStatusDtoSchema,
-} from './appointment.types.js';
-import { DoctorService } from '../doctor/doctor.service.js';
+} from './appointment.types';
+import { DoctorService } from '../doctor/doctor.service';
 
 export class AppointmentController {
   constructor(

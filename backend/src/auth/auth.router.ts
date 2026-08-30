@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import type { AuthController } from './auth.controller.js';
+import type { AuthController } from './auth.controller';
 
 /**
  * createAuthRouter — factory that receives a ready-made controller and returns

@@ -1,10 +1,15 @@
 import { LlamaCpp } from 'node-llama-cpp';
-import type { HealthCheckService } from '../health-check/health-check.service.js';
-import type { MedicineLogsService } from '../medicine-logs/medicine-logs.service.js';
-import type { MedicineService } from '../medicine/medicine.service.js';
-import type { ChatMessage } from './ai.types.js';
+
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+import { logger } from '../utils/logger';
+import { HealthCheckService } from '../health-check/health-check.service';
+import { MedicineLogsService } from '../medicine-logs/medicine-logs.service';
+import { MedicineService } from '../medicine/medicine.service';
+import { ChatMessage } from './ai.types';
 
 export class AiService {
+  private readonly genAI: GoogleGenerativeAI | null = null;
   private readonly model: LlamaCpp;
 
   constructor(
@@ -154,6 +159,10 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
     patientId: string,
     messages: ChatMessage[],
   ): AsyncIterable<string> {
+    if (!this.genAI) {
+      throw new Error('GEMINI_API_KEY environment variable is not set in backend .env file');
+    }
+
     const systemPrompt = await this.buildSystemPrompt(patientId);
 
     // Build a full prompt for the local model, including system instruction and message history.

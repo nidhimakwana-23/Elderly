@@ -1,5 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCreateSession } from '../hooks/useCreateSession';
 import { useFamilyMember } from '../context/FamilyMemberContext';
+import axiosInstance from '../lib/axios';
+import { sendChat, updateSessionTitle } from '../api/ai';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Message {
@@ -90,17 +94,140 @@ function ChatBubble({ message }: { message: Message }) {
 // ─── Main AiChat Component ────────────────────────────────────────────────────
 // API calls go through Vite's /api proxy (configured in vite.config.ts → localhost:3001)
 
+// ─── LocalStorage helpers for Session Persistence ────────────────────────────
+function saveSessionIdToStorage(id: string, patientId?: string | null) {
+  if (patientId) {
+    localStorage.setItem(`ai_chat_session_id_${patientId}`, id);
+  }
+  localStorage.setItem('ai_chat_session_id', id);
+}
+
+function getSavedSessionId(patientId?: string | null): string | null {
+  if (patientId) {
+    const forPatient = localStorage.getItem(`ai_chat_session_id_${patientId}`);
+    if (forPatient) return forPatient;
+  }
+  return localStorage.getItem('ai_chat_session_id');
+}
+
+function clearSavedSessionId(patientId?: string | null) {
+  if (patientId) {
+    localStorage.removeItem(`ai_chat_session_id_${patientId}`);
+  }
+  localStorage.removeItem('ai_chat_session_id');
+}
+
 export function AiChat() {
   const { activeMemberId, activeMemberName, isSelf } = useFamilyMember();
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  // State for conversation sessions list
+  const [sessions, setSessions] = useState<Array<{ id: string; title: string; createdAt: string }>>([]);
+  const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+  // Selected session title for display
+  const [selectedSessionTitle, setSelectedSessionTitle] = useState<string>('');
+
+  // State and refs for chat UI
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Re-initialize welcome message whenever activeMemberId or activeMemberName changes
+  const { create: createSession } = useCreateSession();
+
+  const getWelcomeContent = useCallback(() => {
+    return isSelf
+      ? "Hello! 👋 I'm your personal health assistant. I have access to your health records and medicine logs. Feel free to ask me anything — like:\n\n- **How am I doing with my medicines?**\n- **What do my sugar levels look like recently?**\n- **What should I eat given my health condition?**"
+      : `Hello! 👋 I'm the health assistant for ${activeMemberName}. I have access to their health records and medicine logs. Feel free to ask me anything — like:\n\n- **How is ${activeMemberName} doing with their medicines?**\n- **What do ${activeMemberName}'s sugar levels look?**\n- **What diet is recommended for ${activeMemberName}?**`;
+  }, [isSelf, activeMemberName]);
+
+  // Load available conversation sessions when member changes
+  const fetchSessions = useCallback(async () => {
+    if (!activeMemberId) return;
+    setIsSessionsLoading(true);
+    try {
+      const resp = await axiosInstance.get('/ai/sessions', {
+        params: { patientId: activeMemberId },
+      });
+      setSessions(resp.data);
+    } catch (e) {
+      console.error('Failed to load sessions', e);
+    } finally {
+      setIsSessionsLoading(false);
+    }
+  }, [activeMemberId]);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
+  // Load messages for a given session ID
+  const loadSessionMessages = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const resp = await axiosInstance.get(`/ai/sessions/${id}`);
+        if (!resp.data) return false;
+        setSelectedSessionTitle(resp.data.title || '');
+        const stored = resp.data.messages || [];
+        if (stored.length > 0) {
+          const uiMessages = stored.map((m: any, idx: number) => ({
+            id: `${m.role}-${idx}-${Date.now()}`,
+            role: m.role,
+            content: m.content,
+          }));
+          setMessages(uiMessages);
+        } else {
+          setMessages([
+            {
+              id: 'welcome',
+              role: 'assistant',
+              content: getWelcomeContent(),
+            },
+          ]);
+        }
+        return true;
+      } catch (e) {
+        console.error('Failed to load session messages', e);
+        return false;
+      }
+    },
+    [getWelcomeContent],
+  );
+
+  // Helper to explicitly create a new session and persist its ID
+  const handleCreateNewSession = useCallback(async (): Promise<string | null> => {
+    if (!activeMemberId) return null;
+    abortRef.current?.abort();
+    setIsLoading(false);
+    setError(null);
+    try {
+      const newId = await createSession(activeMemberId);
+      if (newId) {
+        setSessionId(newId);
+        saveSessionIdToStorage(newId, activeMemberId);
+        setSelectedSessionTitle('New conversation');
+        setMessages([
+          {
+            id: 'welcome',
+            role: 'assistant',
+            content: getWelcomeContent(),
+          },
+        ]);
+        fetchSessions();
+        return newId;
+      }
+    } catch (err) {
+      console.error('Failed to create new session', err);
+    }
+    return null;
+  }, [activeMemberId, createSession, fetchSessions, getWelcomeContent]);
+
+  // Ref to track in-flight session initialization to prevent duplicate creation in StrictMode
+  const initRef = useRef<{ memberId: string; promise: Promise<void> } | null>(null);
+
+  // Initialize conversation: first try loading saved ID from localStorage, only create if not found or failed
   useEffect(() => {
     if (!activeMemberId) return;
 
@@ -108,18 +235,64 @@ export function AiChat() {
     setIsLoading(false);
     setError(null);
 
-    const welcomeContent = isSelf
-      ? "Hello! 👋 I'm your personal health assistant. I have access to your health records and medicine logs. Feel free to ask me anything — like:\n\n- **How am I doing with my medicines?**\n- **What do my sugar levels look like recently?**\n- **What should I eat given my health condition?**"
-      : `Hello! 👋 I'm the health assistant for ${activeMemberName}. I have access to their health records and medicine logs. Feel free to ask me anything — like:\n\n- **How is ${activeMemberName} doing with their medicines?**\n- **What do ${activeMemberName}'s sugar levels look like recently?**\n- **What should ${activeMemberName} eat given their health condition?**`;
+    let isCurrent = true;
 
-    setMessages([
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: welcomeContent,
-      },
-    ]);
-  }, [activeMemberId, activeMemberName, isSelf]);
+    const initializeSession = async () => {
+      // 1. Check if a conversation ID exists in localStorage
+      const savedId = getSavedSessionId(activeMemberId);
+
+      if (savedId) {
+        const loadedSuccessfully = await loadSessionMessages(savedId);
+        if (loadedSuccessfully) {
+          if (isCurrent) {
+            setSessionId(savedId);
+            saveSessionIdToStorage(savedId, activeMemberId);
+          }
+          return;
+        }
+        // Failed to load or doesn't exist anymore: clear invalid entry
+        clearSavedSessionId(activeMemberId);
+      }
+
+      // 2. Only if it doesn't exist or doesn't load, create a new conversation
+      const newId = await createSession(activeMemberId);
+      if (newId) {
+        saveSessionIdToStorage(newId, activeMemberId);
+        if (isCurrent) {
+          setSessionId(newId);
+          setSelectedSessionTitle('New conversation');
+          setMessages([
+            {
+              id: 'welcome',
+              role: 'assistant',
+              content: getWelcomeContent(),
+            },
+          ]);
+          fetchSessions();
+        }
+      }
+    };
+
+    if (!initRef.current || initRef.current.memberId !== activeMemberId) {
+      initRef.current = {
+        memberId: activeMemberId,
+        promise: initializeSession(),
+      };
+    } else {
+      initRef.current.promise.then(() => {
+        if (!isCurrent) return;
+        const currentSavedId = getSavedSessionId(activeMemberId);
+        if (currentSavedId) {
+          setSessionId(currentSavedId);
+          loadSessionMessages(currentSavedId);
+        }
+      });
+    }
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [activeMemberId, createSession, fetchSessions, getWelcomeContent, loadSessionMessages]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -162,21 +335,54 @@ export function AiChat() {
     abortRef.current = new AbortController();
 
     try {
-      const response = await fetch(`/api/ai/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patientId: activeMemberId,
-          messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
-        }),
-        signal: abortRef.current.signal,
-      });
-
-      if (!response.ok || !response.body) {
-        throw new Error(`Server error: ${response.status}`);
+      let targetSessionId = sessionId;
+      if (!targetSessionId) {
+        targetSessionId = (await handleCreateNewSession()) || null;
       }
 
-      const reader = response.body.getReader();
+      const isFirstUserMessage =
+        !messages.some((m) => m.role === 'user') ||
+        selectedSessionTitle.toLowerCase() === 'new conversation' ||
+        !selectedSessionTitle;
+
+      if (isFirstUserMessage && targetSessionId) {
+        const newTitle = trimmed.slice(0, 60);
+        setSelectedSessionTitle(newTitle);
+        setSessions((prev) => {
+          const exists = prev.some((s) => s.id === targetSessionId);
+          if (exists) {
+            return prev.map((s) => (s.id === targetSessionId ? { ...s, title: newTitle } : s));
+          }
+          return [
+            {
+              id: targetSessionId,
+              userId: '',
+              patientId: activeMemberId,
+              title: newTitle,
+              messages: [],
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            ...prev,
+          ];
+        });
+        updateSessionTitle(targetSessionId, newTitle).catch((err) => {
+          console.error('Failed to update session title in backend:', err);
+        });
+      }
+
+
+      const response = await sendChat({
+        patientId: activeMemberId,
+        sessionId: targetSessionId,
+        messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+      })
+
+      if (response.status !== 200) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+      const reader = (response.data as any).getReader();
       const decoder = new TextDecoder();
       let accumulatedText = '';
 
@@ -198,6 +404,7 @@ export function AiChat() {
                 m.id === assistantMsgId ? { ...m, isStreaming: false } : m,
               ),
             );
+            fetchSessions();
             return;
           }
 
@@ -235,7 +442,8 @@ export function AiChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages, activeMemberId]);
+  }, [input, isLoading, messages, activeMemberId, sessionId, selectedSessionTitle, handleCreateNewSession, fetchSessions]);
+
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -269,7 +477,7 @@ export function AiChat() {
   // ─── Chat UI ──────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-[calc(100vh-56px)] bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50">
-      {/* Header */}
+      {/* Header with session selector */}
       <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow">
@@ -280,14 +488,43 @@ export function AiChat() {
             <p className="text-xs text-gray-500 flex items-center gap-1 font-medium">
               Viewing: <span className="font-semibold text-indigo-600">{activeMemberName}</span>
               {isSelf && (
-                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">
-                  You
-                </span>
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">You</span>
               )}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Session dropdown */}
+          <select
+            id="session-select"
+            className="border border-gray-300 rounded-md px-2 py-1 text-sm bg-white text-gray-700"
+            disabled={isSessionsLoading}
+            value={sessionId || ''}
+            onChange={async (e) => {
+              const selectedId = e.target.value;
+              if (selectedId) {
+                setSessionId(selectedId);
+                saveSessionIdToStorage(selectedId, activeMemberId);
+                const sel = sessions.find((s) => s.id === selectedId);
+                setSelectedSessionTitle(sel?.title || '');
+                await loadSessionMessages(selectedId);
+              } else {
+                await handleCreateNewSession();
+              }
+            }}
+          >
+            <option value="">+ New conversation</option>
+            {sessionId && !sessions.some((s) => s.id === sessionId) && (
+              <option value={sessionId}>
+                {selectedSessionTitle || 'Current conversation'}
+              </option>
+            )}
+            {sessions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title} ({new Date(s.createdAt).toLocaleDateString()})
+              </option>
+            ))}
+          </select>
           <span className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${isLoading ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
             {isLoading ? 'Analysing...' : 'Ready'}

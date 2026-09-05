@@ -1,20 +1,20 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getLlama, LlamaChatSession } from 'node-llama-cpp';
 
 import { logger } from '../utils/logger';
 import { HealthCheckService } from '../health-check/health-check.service';
 import { MedicineLogsService } from '../medicine-logs/medicine-logs.service';
 import { MedicineService } from '../medicine/medicine.service';
-import { ChatMessage } from './ai.types';
-import { getLlama, LlamaChatSession } from 'node-llama-cpp';
+import type { IConversationRepository } from '../db/conversation.repository';
+import type { ChatMessage, ConversationSession } from './ai.types';
 
 export class AiService {
-  private readonly genAI: GoogleGenerativeAI | null = null;
   private readonly modelPath: string;
 
   constructor(
     private readonly healthCheckService: HealthCheckService,
     private readonly medicineLogsService: MedicineLogsService,
     private readonly medicineService: MedicineService,
+    private readonly conversationRepository: IConversationRepository,
   ) {
     const modelPath = process.env['QWEN_MODEL_PATH'];
     if (!modelPath) {
@@ -23,6 +23,81 @@ export class AiService {
     this.modelPath = modelPath;
     // No immediate model instantiation; session will be created on demand
   }
+
+  // ── Conversation session management ─────────────────────────────────────────
+
+  /**
+   * Create a new empty conversation session for the given user/patient.
+   * The title is derived from the first user message (up to 60 chars).
+   */
+  async createSession(
+    userId: string,
+    patientId: string,
+    firstUserMessage: string,
+  ): Promise<ConversationSession> {
+    const title = firstUserMessage.trim().slice(0, 60) || 'New Conversation';
+    return this.conversationRepository.createSession(userId, patientId, title);
+  }
+
+  /**
+   * List all sessions owned by the given user, newest first.
+   */
+  async listSessions(userId: string): Promise<ConversationSession[]> {
+    return this.conversationRepository.listSessionsByUser(userId);
+  }
+
+  /**
+   * Fetch a single session by ID. Returns undefined if not found.
+   */
+  async getSession(sessionId: string): Promise<ConversationSession | undefined> {
+    return this.conversationRepository.getSession(sessionId);
+  }
+
+  /**
+   * Delete a session (ownership must be verified by the caller before invoking).
+   */
+  async deleteSession(sessionId: string): Promise<void> {
+    return this.conversationRepository.deleteSession(sessionId);
+  }
+
+  /**
+   * Update session title (ownership must be verified by the caller before invoking).
+   */
+  async updateSessionTitle(
+    sessionId: string,
+    title: string,
+  ): Promise<ConversationSession | undefined> {
+    const cleanTitle = title.trim().slice(0, 60) || 'New Conversation';
+    await this.conversationRepository.updateSessionTitle(sessionId, cleanTitle);
+    return this.conversationRepository.getSession(sessionId);
+  }
+
+  /**
+   * Append a user + assistant turn to an existing session after streaming ends.
+   * Also updates the title from the user's message if the session still has the default title.
+   */
+  async saveTurn(
+    sessionId: string,
+    userMessage: string,
+    assistantReply: string,
+  ): Promise<void> {
+    const now = new Date().toISOString();
+    const session = await this.conversationRepository.getSession(sessionId);
+    if (
+      session &&
+      (!session.title || session.title.toLowerCase() === 'new conversation')
+    ) {
+      const derivedTitle = userMessage.trim().slice(0, 60) || 'New Conversation';
+      await this.conversationRepository.updateSessionTitle(sessionId, derivedTitle);
+    }
+    await this.conversationRepository.appendMessages(sessionId, [
+      { role: 'user',      content: userMessage,    timestamp: now },
+      { role: 'assistant', content: assistantReply, timestamp: now },
+    ]);
+  }
+
+
+  // ── Patient data / prompt building ──────────────────────────────────────────
 
   /**
    * Fetches all patient data from the DB and builds a rich system prompt.
@@ -146,6 +221,8 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
 9. Format responses with clear sections using markdown bold and bullet points for readability.`;
   }
 
+  // ── Llama session ───────────────────────────────────────────────────────────
+
   /**
    * Creates a LlamaChatSession with the loaded model.
    */
@@ -156,22 +233,26 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
     return new LlamaChatSession({ contextSequence: context.getSequence() });
   }
 
+  // ── Streaming ───────────────────────────────────────────────────────────────
 
   /**
-   * Returns an async iterable of text chunks from Gemini.
+   * Returns an async iterable of text chunks from the local Llama model.
+   *
+   * @param patientId  - Used to build the patient-specific system prompt.
+   * @param messages   - Full conversation history sent from the client.
+   * @param sessionId  - If provided, the completed user + assistant turn will be
+   *                     persisted to MongoDB once the stream ends.
    */
   async *streamChat(
     patientId: string,
     messages: ChatMessage[],
+    sessionId?: string,
   ): AsyncIterable<string> {
-
     const systemPrompt = await this.buildSystemPrompt(patientId);
 
     // Build a full prompt for the local model, including system instruction and message history.
     const promptLines: string[] = [];
-    // System prompt at the beginning
     promptLines.push(systemPrompt);
-    // Append conversation history
     for (const msg of messages) {
       const roleLabel = msg.role === 'assistant' ? 'Assistant' : 'User';
       promptLines.push(`${roleLabel}: ${msg.content}`);
@@ -181,10 +262,26 @@ Overall Adherence Rate (last 60 days): ${adherenceRate !== null ? adherenceRate 
     // Use Llama session for streaming response
     const session = await this.createLlamaSession();
     const stream = await session.prompt(fullPrompt);
+
+    // Collect the full reply so we can persist it after streaming
+    const replyChunks: string[] = [];
+
     for await (const chunk of stream) {
       const text = typeof chunk === 'string' ? chunk : ((chunk as any).text ?? '');
       if (text) {
+        replyChunks.push(text);
         yield text;
+      }
+    }
+
+    // ── Persist turn after stream ends ───────────────────────────────────────
+    if (sessionId) {
+      const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
+      if (lastUserMessage) {
+        const assembledReply = replyChunks.join('');
+        this.saveTurn(sessionId, lastUserMessage.content, assembledReply).catch((err) => {
+          logger.error('[AiService] Failed to save conversation turn:', err);
+        });
       }
     }
   }

@@ -28,6 +28,7 @@ import { MongooseDoctorRepository } from './src/db/mongoose/mongoose.doctor.repo
 import { MongooseAppointmentRepository } from './src/db/mongoose/mongoose.appointment.repository';
 import { MongooseEmergencyRepository } from './src/db/mongoose/mongoose.emergency.repository';
 import { MongoosePrescriptionRepository } from './src/db/mongoose/mongoose.prescription.repository';
+import { MongooseConversationRepository } from './src/db/mongoose/mongoose.conversation.repository';
 
 // ─── Services ──────────────────────────────────────────────────────────────────────────
 import { AuthService } from './src/auth/auth.service';
@@ -101,6 +102,7 @@ const doctorRepository = new MongooseDoctorRepository();
 const appointmentRepository = new MongooseAppointmentRepository();
 const emergencyRepository = new MongooseEmergencyRepository();
 const prescriptionRepository = new MongoosePrescriptionRepository();
+const conversationRepository = new MongooseConversationRepository();
 
 const authService = new AuthService(userRepository);
 const familyService = new FamilyService(userRepository);
@@ -118,7 +120,7 @@ const healthTrendService = new HealthTrendService(
   prescriptionRepository,
   appointmentRepository,
 );
-const aiService = new AiService(healthCheckService, medicineLogsService, medicineService);
+const aiService = new AiService(healthCheckService, medicineLogsService, medicineService, conversationRepository);
 
 const authController = new AuthController(authService);
 const familyController = new FamilyController(familyService);

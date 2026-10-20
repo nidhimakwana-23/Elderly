@@ -68,6 +68,9 @@ import { createHealthTrendRouter } from './src/health-trend/health-trend.router'
 import { AiService } from './src/ai/ai.service';
 import { AiController } from './src/ai/ai.controller';
 import { createAiRouter } from './src/ai/ai.router';
+import { ChatbotService } from './src/chatbot/chatbot.service';
+import { ChatbotController } from './src/chatbot/chatbot.controller';
+import { createChatbotRouter } from './src/chatbot/chatbot.router';
 import { logger } from './src/utils/logger';
 
 const app = express();
@@ -121,6 +124,7 @@ const healthTrendService = new HealthTrendService(
   appointmentRepository,
 );
 const aiService = new AiService(healthCheckService, medicineLogsService, medicineService, conversationRepository);
+const chatbotService = new ChatbotService(medicineLogsService, healthCheckService, healthTrendService, medicineService);
 
 const authController = new AuthController(authService);
 const familyController = new FamilyController(familyService);
@@ -133,6 +137,7 @@ const emergencyController = new EmergencyController(emergencyService, doctorServ
 const prescriptionController = new PrescriptionController(prescriptionService);
 const healthTrendController = new HealthTrendController(healthTrendService);
 const aiController = new AiController(aiService);
+const chatbotController = new ChatbotController(chatbotService);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api', (_req: Request, res: Response) => {
@@ -151,6 +156,7 @@ app.use('/api/emergency', createEmergencyRouter(emergencyController));
 app.use('/api/prescriptions', createPrescriptionRouter(prescriptionController));
 app.use('/api/health-trend', createHealthTrendRouter(healthTrendController));
 app.use('/api/ai', createAiRouter(aiController));
+app.use('/api/chatbot', createChatbotRouter(chatbotController, userRepository));
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req: Request, res: Response): void => {

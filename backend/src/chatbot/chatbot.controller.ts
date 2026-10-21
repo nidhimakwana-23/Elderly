@@ -14,11 +14,15 @@
 
 import type { Request, Response } from 'express';
 import type { ChatbotService } from './chatbot.service';
+import type { IUserRepository } from '../db/user.repository';
 import { ChatbotIntentRequestSchema } from './chatbot.types';
 import { logger } from '../utils/logger';
 
 export class ChatbotController {
-  constructor(private readonly chatbotService: ChatbotService) {}
+  constructor(
+    private readonly chatbotService: ChatbotService,
+    private readonly userRepository?: IUserRepository,
+  ) {}
 
   /**
    * POST /api/chatbot/intent
@@ -50,7 +54,7 @@ export class ChatbotController {
   /**
    * POST /api/chatbot/ask
    *
-   * Full chatbot flow: classify intent -> query verified patient data -> answer.
+   * Full chatbot flow: classify intent -> verify authorization -> query verified patient data -> answer.
    *
    * Requires: JWT auth (requireAuth) + patient access check (requirePatientAccess).
    * The patientId is resolved in the following priority:
@@ -62,6 +66,12 @@ export class ChatbotController {
    */
   ask = async (req: Request, res: Response): Promise<void> => {
     try {
+      const callerId = req.user?.id;
+      if (!callerId) {
+        res.status(401).json({ error: 'Unauthorized: Authentication required.' });
+        return;
+      }
+
       const parseResult = ChatbotIntentRequestSchema.safeParse(req.body);
       if (!parseResult.success) {
         const errorMessage =
@@ -70,23 +80,47 @@ export class ChatbotController {
         return;
       }
 
-      // Resolve the patient ID — prefer explicit body value, fall back to caller's own ID
-      const patientId = parseResult.data.patientId?.trim() || req.user?.id;
-      if (!patientId) {
-        res.status(400).json({ error: 'Could not determine patient ID from request.' });
+      // Resolve the target patient ID
+      const requestedPatientId = parseResult.data.patientId?.trim();
+      const patientId = requestedPatientId || callerId;
+
+      // Defense-in-depth: verify caller is authorized for the target patient
+      if (requestedPatientId && requestedPatientId !== callerId && this.userRepository) {
+        const profiles = await this.userRepository.getFamilyProfilesByUserId(callerId);
+        const isLinked = profiles.some((p) => p.userId === requestedPatientId);
+        if (!isLinked) {
+          res.status(403).json({
+            error: 'Access denied: You are not authorized to access data for this patient.',
+          });
+          return;
+        }
+      }
+
+      // Step 1: Classify intent (privacy: only the question text is sent to Python)
+      let prediction;
+      try {
+        prediction = await this.chatbotService.classifyIntent(parseResult.data.question);
+      } catch (classifierError) {
+        logger.error('[ChatbotController.ask] Classifier failure:', classifierError);
+        res.status(503).json({
+          error: 'Intent classifier service is temporarily unavailable.',
+        });
         return;
       }
 
-      // Classify intent (privacy: only the question text is sent to Python)
-      const prediction = await this.chatbotService.classifyIntent(parseResult.data.question);
-
-      // Build a deterministic DB-backed answer
-      const response = await this.chatbotService.buildAnswer(prediction, patientId);
-
-      res.status(200).json(response);
+      // Step 2: Build a deterministic DB-backed answer using authorized patient data
+      try {
+        const response = await this.chatbotService.buildAnswer(prediction, patientId);
+        res.status(200).json(response);
+      } catch (serviceError) {
+        logger.error('[ChatbotController.ask] Service failure:', serviceError);
+        res.status(500).json({
+          error: 'An error occurred while retrieving medication data.',
+        });
+      }
     } catch (error) {
-      logger.error('[ChatbotController] ask error:', error);
-      res.status(500).json({ error: 'An error occurred while processing your request.' });
+      logger.error('[ChatbotController.ask] Unexpected error:', error);
+      res.status(500).json({ error: 'An unexpected error occurred while processing your request.' });
     }
   };
 }

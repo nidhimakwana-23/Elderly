@@ -96,7 +96,7 @@ export class ChatbotService {
     private readonly healthCheckService: HealthCheckService,
     private readonly healthTrendService: HealthTrendService,
     private readonly medicineService: MedicineService,
-  ) {}
+  ) { }
 
   // ── Step 1: Intent classification ──────────────────────────────────────────
 
@@ -217,17 +217,29 @@ export class ChatbotService {
   // ── Step 2: Intent dispatcher ───────────────────────────────────────────────
 
   /**
-   * Given an intent prediction and a verified patient ID, run the appropriate
-   * DB analytics and build a factual, deterministic answer.
+   * Chatbot dispatcher: routes classified intent to its dedicated handler.
+   * For Phase 3, only 'medicine_today' is in scope.
+   * Other intents or low-confidence / unknown queries produce informative, graceful fallbacks.
    */
   async buildAnswer(prediction: IntentPrediction, patientId: string): Promise<ChatbotResponse> {
     const { intent, confidence } = prediction;
+
+    // Handle unknown or low-confidence predictions (< 0.70)
+    if (intent === 'unknown' || confidence < 0.70) {
+      return {
+        intent: 'unknown',
+        confidence,
+        answer:
+          "I couldn't understand your question with enough confidence. " +
+          "Currently, I can answer questions about today's medicines (e.g., 'Did mom take her medicine today?').",
+      };
+    }
 
     let answer: string;
 
     switch (intent) {
       case 'medicine_today':
-        answer = await this.getMedicineTodayAnswer(patientId);
+        answer = await this.handleMedicineToday(patientId);
         break;
       case 'medicine_missed':
         answer = await this.getMedicineMissedAnswer(patientId);
@@ -250,11 +262,9 @@ export class ChatbotService {
       case 'health_summary':
         answer = await this.getHealthSummaryAnswer(patientId);
         break;
-      case 'unknown':
       default:
         answer =
-          "I couldn't identify what health information you are asking about. " +
-          'Please try asking about medicines, blood pressure, blood sugar, weight, or a recent health summary.';
+          "I am unable to process this question. Please ask about today's medicines (e.g., 'Did mom take her medicine today?').";
     }
 
     return { intent, confidence, answer };
@@ -262,38 +272,96 @@ export class ChatbotService {
 
   // ── Intent handlers ─────────────────────────────────────────────────────────
 
-  private async getMedicineTodayAnswer(patientId: string): Promise<string> {
+  /**
+   * Dedicated handler for the 'medicine_today' intent.
+   * Queries existing medicine logs and prescriptions for the specified patient on today's date.
+   * Produces a factual, human-readable plain-language answer based strictly on recorded data.
+   */
+  async handleMedicineToday(patientId: string): Promise<string> {
     const todayString = new Date().toISOString().split('T')[0]!;
-    const logs = await this.medicineLogsService.getMedicineHistory(patientId, todayString);
 
-    if (logs.length === 0) {
-      return 'No medicine logs were found for today.';
+    // Query today's logs and active prescriptions concurrently
+    const [logs, medicines] = await Promise.all([
+      this.medicineLogsService.getMedicineHistory(patientId, todayString),
+      this.medicineService ? this.medicineService.getMedicines(patientId) : Promise.resolve([]),
+    ]);
+
+    // Case 1: Medicine logs exist for today
+    if (logs.length > 0) {
+      const taken = logs.filter((l) => l.status === 'Taken');
+      const pending = logs.filter((l) => l.status === 'Pending');
+      const missed = logs.filter((l) => l.status === 'Missed');
+      const skipped = logs.filter((l) => l.status === 'Skipped');
+
+      const lines: string[] = [];
+
+      // Summary sentence
+      if (taken.length === logs.length) {
+        lines.push(`All scheduled medicines for today (${todayString}) have been taken.`);
+      } else if (taken.length === 0 && pending.length === logs.length) {
+        lines.push(
+          `No medicines have been taken yet today (${todayString}). All ${pending.length} scheduled dose(s) are pending.`
+        );
+      } else {
+        const counts: string[] = [];
+        if (taken.length > 0) counts.push(`${taken.length} taken`);
+        if (pending.length > 0) counts.push(`${pending.length} pending`);
+        if (missed.length > 0) counts.push(`${missed.length} missed`);
+        if (skipped.length > 0) counts.push(`${skipped.length} skipped`);
+        lines.push(
+          `Today's medication status (${todayString}): ${counts.join(', ')} (out of ${logs.length} scheduled doses).`
+        );
+      }
+
+      // Detailed breakdown
+      if (taken.length > 0) {
+        const details = taken
+          .map((l) => `${l.medicineName}${l.dosage ? ` (${l.dosage})` : ''}${l.takenTime ? ` at ${l.takenTime}` : ''}`)
+          .join(', ');
+        lines.push(`  ✓ Taken: ${details}`);
+      }
+      if (pending.length > 0) {
+        const details = pending
+          .map((l) => `${l.medicineName}${l.dosage ? ` (${l.dosage})` : ''}${l.scheduledTime ? ` (scheduled ${l.scheduledTime})` : ''}`)
+          .join(', ');
+        lines.push(`  ⏳ Pending: ${details}`);
+      }
+      if (missed.length > 0) {
+        const details = missed
+          .map((l) => `${l.medicineName}${l.dosage ? ` (${l.dosage})` : ''}`)
+          .join(', ');
+        lines.push(`  ✗ Missed: ${details}`);
+      }
+      if (skipped.length > 0) {
+        const details = skipped
+          .map((l) => `${l.medicineName}${l.dosage ? ` (${l.dosage})` : ''}${l.skippedReason ? ` (reason: ${l.skippedReason})` : ''}`)
+          .join(', ');
+        lines.push(`  — Skipped: ${details}`);
+      }
+
+      return lines.join('\n');
     }
 
-    const taken  = logs.filter((l) => l.status === 'Taken');
-    const missed = logs.filter((l) => l.status === 'Missed');
-    const skipped = logs.filter((l) => l.status === 'Skipped');
-    const pending = logs.filter((l) => l.status === 'Pending');
-
-    const lines: string[] = [`Medicine status for today (${todayString}):`];
-
-    if (taken.length > 0) {
-      lines.push(
-        `  ✓ Taken (${taken.length}): ` +
-          taken.map((l) => `${l.medicineName}${l.takenTime ? ` at ${l.takenTime}` : ''}`).join(', ')
+    // Case 2: No logs for today, but check if there are registered active medicines
+    const activeMedicines = medicines.filter((m) => m.status === 'Active');
+    if (activeMedicines.length > 0) {
+      const medList = activeMedicines
+        .map((m) => `${m.medicine_name} (${m.dosage}, ${m.frequency})`)
+        .join(', ');
+      return (
+        `No medicine logs have been recorded for today (${todayString}) yet. ` +
+        `The patient has ${activeMedicines.length} active scheduled medicine(s): ${medList}. ` +
+        `None have been recorded as taken, missed, or skipped so far.`
       );
     }
-    if (missed.length > 0) {
-      lines.push(`  ✗ Missed (${missed.length}): ` + missed.map((l) => l.medicineName).join(', '));
-    }
-    if (skipped.length > 0) {
-      lines.push(`  — Skipped (${skipped.length}): ` + skipped.map((l) => l.medicineName).join(', '));
-    }
-    if (pending.length > 0) {
-      lines.push(`  ⏳ Pending (${pending.length}): ` + pending.map((l) => `${l.medicineName} (scheduled ${l.scheduledTime})`).join(', '));
+
+    // Case 3: Inactive medicines only
+    if (medicines.length > 0) {
+      return `No medicine logs were found for today (${todayString}), and all ${medicines.length} registered medicine record(s) are currently inactive.`;
     }
 
-    return lines.join('\n');
+    // Case 4: No medicines registered at all
+    return `No medicine records or logs were found for this patient.`;
   }
 
   private async getMedicineMissedAnswer(patientId: string): Promise<string> {
@@ -345,7 +413,7 @@ export class ChatbotService {
 
     for (const log of takenLogs) {
       const scheduled = parseTime(log.scheduledTime!);
-      const taken     = parseTime(log.takenTime!);
+      const taken = parseTime(log.takenTime!);
       if (!scheduled || !taken) continue;
 
       const delayMinutes = (taken.getTime() - scheduled.getTime()) / 60_000;
@@ -357,7 +425,7 @@ export class ChatbotService {
     }
 
     const total = onTime + late;
-    const pct   = total > 0 ? Math.round((onTime / total) * 100) : 0;
+    const pct = total > 0 ? Math.round((onTime / total) * 100) : 0;
 
     return (
       `Medicine timing analysis (tolerance: ±${ON_TIME_TOLERANCE_MINUTES} minutes):\n` +
@@ -383,7 +451,7 @@ export class ChatbotService {
       `  Adherence rate         : ${report.adherence}\n` +
       (report.today.length > 0
         ? `\n  Today's medicines:\n` +
-            report.today.map((t) => `    • ${t.medicineName} — ${t.status}${t.takenTime ? ` (taken at ${t.takenTime})` : ''}`).join('\n')
+        report.today.map((t) => `    • ${t.medicineName} — ${t.status}${t.takenTime ? ` (taken at ${t.takenTime})` : ''}`).join('\n')
         : '')
     );
   }
@@ -403,8 +471,8 @@ export class ChatbotService {
     const values = checks.map((c) => c.sugar_level!);
     const latest = values[0]!;
     const oldest = values[values.length - 1]!;
-    const avg    = Math.round(values.reduce((a, b) => a + b, 0) / values.length * 100) / 100;
-    const trend  = latest > oldest ? 'increased' : latest < oldest ? 'decreased' : 'remained stable';
+    const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length * 100) / 100;
+    const trend = latest > oldest ? 'increased' : latest < oldest ? 'decreased' : 'remained stable';
 
     return (
       `Blood sugar trend — last ${TREND_DAYS} days (${checks.length} readings):\n` +
@@ -428,7 +496,7 @@ export class ChatbotService {
     }
 
     const readings = checks.map((c) => `${c.date}: ${c.blood_pressure}`);
-    const latest   = checks[0]!;
+    const latest = checks[0]!;
 
     return (
       `Blood pressure trend — last ${TREND_DAYS} days (${checks.length} readings):\n` +
@@ -468,10 +536,10 @@ export class ChatbotService {
   private async getHealthSummaryAnswer(patientId: string): Promise<string> {
     const fromDate = new Date();
     fromDate.setDate(fromDate.getDate() - TREND_DAYS);
-    const summary  = await this.healthTrendService.getPatientSummary(patientId, {
+    const summary = await this.healthTrendService.getPatientSummary(patientId, {
       from: toDateString(fromDate),
     });
-    const report   = await this.medicineLogsService.generateReport(patientId, 'weekly');
+    const report = await this.medicineLogsService.generateReport(patientId, 'weekly');
 
     const { vitalTrends } = summary;
     const lines: string[] = [`Recent health summary — last ${TREND_DAYS} days:`];
@@ -481,11 +549,11 @@ export class ChatbotService {
     lines.push(`  Taken     : ${report.taken}  |  Missed: ${report.missed}  |  Pending: ${report.pending}`);
 
     lines.push('\nVitals:');
-    if (vitalTrends.latestBP)    lines.push(`  Blood pressure (latest) : ${vitalTrends.latestBP}`);
+    if (vitalTrends.latestBP) lines.push(`  Blood pressure (latest) : ${vitalTrends.latestBP}`);
     if (vitalTrends.avgSugarLevel != null) lines.push(`  Avg blood sugar         : ${vitalTrends.avgSugarLevel}`);
-    if (vitalTrends.avgWeight != null)     lines.push(`  Avg weight              : ${vitalTrends.avgWeight} kg`);
-    if (vitalTrends.avgBmi != null)        lines.push(`  Avg BMI                 : ${vitalTrends.avgBmi}`);
-    if (vitalTrends.latestBloodLevel)      lines.push(`  Blood level (latest)    : ${vitalTrends.latestBloodLevel}`);
+    if (vitalTrends.avgWeight != null) lines.push(`  Avg weight              : ${vitalTrends.avgWeight} kg`);
+    if (vitalTrends.avgBmi != null) lines.push(`  Avg BMI                 : ${vitalTrends.avgBmi}`);
+    if (vitalTrends.latestBloodLevel) lines.push(`  Blood level (latest)    : ${vitalTrends.latestBloodLevel}`);
 
     if (
       !vitalTrends.latestBP &&
@@ -498,3 +566,5 @@ export class ChatbotService {
     return lines.join('\n');
   }
 }
+
+

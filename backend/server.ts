@@ -138,7 +138,7 @@ const emergencyController = new EmergencyController(emergencyService, doctorServ
 const prescriptionController = new PrescriptionController(prescriptionService);
 const healthTrendController = new HealthTrendController(healthTrendService);
 const aiController = new AiController(aiService);
-const chatbotController = new ChatbotController(chatbotService);
+const chatbotController = new ChatbotController(chatbotService, userRepository);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api', (_req: Request, res: Response) => {

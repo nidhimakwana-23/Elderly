@@ -12,38 +12,67 @@
  */
 
 import { spawn } from 'child_process';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { logger } from '../utils/logger';
-import { isChatbotIntent, type ChatbotIntent, type IntentPrediction, type ChatbotResponse } from './chatbot.types';
+import {
+  isChatbotIntent,
+  type ChatbotIntent,
+  type IntentPrediction,
+  type ChatbotResponse,
+} from './chatbot.types';
 import type { MedicineLogsService } from '../medicine-logs/medicine-logs.service';
 import type { HealthCheckService } from '../health-check/health-check.service';
 import type { HealthTrendService } from '../health-trend/health-trend.service';
 import type { MedicineService } from '../medicine/medicine.service';
 
 // ── Environment-configurable paths ────────────────────────────────────────────
-// Override in .env:
-//   CHATBOT_PYTHON_EXECUTABLE=python
-//   CHATBOT_PREDICT_SCRIPT=../ml/intent-classifier/predict.py
-const PYTHON_EXECUTABLE = process.env['CHATBOT_PYTHON_EXECUTABLE'] ?? 'python';
-const PREDICT_SCRIPT_ENV = process.env['CHATBOT_PREDICT_SCRIPT'];
-
 // ESM-compatible __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
-const __dirname  = path.dirname(__filename);
+const __dirname = path.dirname(__filename);
 
-// Default: resolve relative to THIS file → <repo>/backend/src/chatbot/ → ../../..
-const DEFAULT_PREDICT_SCRIPT = path.resolve(
-  __dirname,
-  '../../../ml/intent-classifier/predict.py',
-);
-const PREDICT_SCRIPT = PREDICT_SCRIPT_ENV
-  ? path.resolve(PREDICT_SCRIPT_ENV)
-  : DEFAULT_PREDICT_SCRIPT;
+/**
+ * Resolves the Python executable to use:
+ * 1. CHATBOT_PYTHON_EXECUTABLE environment variable if set
+ * 2. Virtual environment python in ml/intent-classifier/.venv if it exists
+ * 3. Default 'python' from system PATH
+ */
+function getPythonExecutable(): string {
+  if (process.env['CHATBOT_PYTHON_EXECUTABLE']) {
+    return process.env['CHATBOT_PYTHON_EXECUTABLE'];
+  }
+  const isWin = process.platform === 'win32';
+  const venvPython = path.resolve(
+    __dirname,
+    isWin
+      ? '../../../ml/intent-classifier/.venv/Scripts/python.exe'
+      : '../../../ml/intent-classifier/.venv/bin/python',
+  );
+  if (fs.existsSync(venvPython)) {
+    return venvPython;
+  }
+  return 'python';
+}
 
+/**
+ * Resolves the predict.py script path:
+ * 1. CHATBOT_PREDICT_SCRIPT environment variable if set (absolute or cwd-relative)
+ * 2. Default: relative to this file -> ../../../ml/intent-classifier/predict.py
+ */
+function getPredictScript(): string {
+  if (process.env['CHATBOT_PREDICT_SCRIPT']) {
+    const envPath = process.env['CHATBOT_PREDICT_SCRIPT'];
+    return path.isAbsolute(envPath) ? envPath : path.resolve(process.cwd(), envPath);
+  }
+  return path.resolve(__dirname, '../../../ml/intent-classifier/predict.py');
+}
 
-// Spawn timeout in milliseconds (5 s)
-const PROCESS_TIMEOUT_MS = 5_000;
+// Spawn timeout in milliseconds (default: 20 s to accommodate cold starts on Windows)
+const PROCESS_TIMEOUT_MS = Number(process.env['CHATBOT_PROCESS_TIMEOUT_MS']) || 20_000;
+
+// Maximum allowed stdout buffer from the Python process (64 KB)
+const MAX_OUTPUT_BYTES = 64 * 1024;
 
 // ─── On-time tolerance ───────────────────────────────────────────────────────
 // A medicine is considered "on time" if the delay is within this window.
@@ -76,25 +105,44 @@ export class ChatbotService {
    * Only the raw question string is passed; no patient data is included.
    */
   async classifyIntent(question: string): Promise<IntentPrediction> {
+    const trimmed = question.trim();
+    if (!trimmed) {
+      throw new Error('Question must not be empty.');
+    }
+
+    const scriptPath = getPredictScript();
+    if (!fs.existsSync(scriptPath)) {
+      throw new Error(`Intent classifier script not found at: ${scriptPath}`);
+    }
+
+    const pythonExecutable = getPythonExecutable();
+
     return new Promise((resolve, reject) => {
       let stdout = '';
       let stderr = '';
       let timedOut = false;
+      let outputLimitExceeded = false;
 
       // Use spawn (not exec) so the question is passed as a process argument,
       // not interpolated into a shell command string.
-      const child = spawn(PYTHON_EXECUTABLE, [PREDICT_SCRIPT, question], {
+      const child = spawn(pythonExecutable, [scriptPath, trimmed], {
         shell: false, // explicit: no shell injection possible
       });
 
       const timer = setTimeout(() => {
         timedOut = true;
-        child.kill('SIGTERM');
+        child.kill();
         reject(new Error(`Python classifier timed out after ${PROCESS_TIMEOUT_MS} ms`));
       }, PROCESS_TIMEOUT_MS);
 
       child.stdout.on('data', (chunk: Buffer) => {
         stdout += chunk.toString();
+        if (stdout.length > MAX_OUTPUT_BYTES && !outputLimitExceeded) {
+          outputLimitExceeded = true;
+          child.kill();
+          clearTimeout(timer);
+          reject(new Error(`Python classifier output exceeded maximum allowed limit of ${MAX_OUTPUT_BYTES} bytes`));
+        }
       });
 
       child.stderr.on('data', (chunk: Buffer) => {
@@ -103,14 +151,14 @@ export class ChatbotService {
 
       child.on('close', (code: number | null) => {
         clearTimeout(timer);
-        if (timedOut) return;
+        if (timedOut || outputLimitExceeded) return;
 
         if (stderr.trim()) {
           logger.warn('[ChatbotService] Python stderr:', stderr.trim());
         }
 
         if (code !== 0) {
-          reject(new Error(`predict.py exited with code ${code ?? '?'}. Stderr: ${stderr.trim()}`));
+          reject(new Error(`predict.py exited with code ${code ?? 'null'}. Stderr: ${stderr.trim()}`));
           return;
         }
 
@@ -135,26 +183,33 @@ export class ChatbotService {
 
         const raw = parsed as Record<string, unknown>;
 
-        if (!isChatbotIntent(raw['intent'])) {
-          logger.warn(`[ChatbotService] Unrecognised intent from model: "${raw['intent']}". Treating as unknown.`);
-          resolve({ intent: 'unknown', confidence: 0 });
+        if (
+          typeof raw['confidence'] !== 'number' ||
+          !Number.isFinite(raw['confidence']) ||
+          raw['confidence'] < 0 ||
+          raw['confidence'] > 1
+        ) {
+          reject(new Error(`predict.py returned invalid confidence: ${raw['confidence']}`));
           return;
         }
 
-        if (typeof raw['confidence'] !== 'number') {
-          reject(new Error(`predict.py returned non-numeric confidence: ${raw['confidence']}`));
-          return;
+        let intent: ChatbotIntent;
+        if (isChatbotIntent(raw['intent'])) {
+          intent = raw['intent'];
+        } else {
+          logger.warn(`[ChatbotService] Unrecognised intent from model: "${raw['intent']}". Treating as unknown.`);
+          intent = 'unknown';
         }
 
         resolve({
-          intent: raw['intent'] as ChatbotIntent,
-          confidence: raw['confidence'] as number,
+          intent,
+          confidence: Number(raw['confidence'].toFixed(4)),
         });
       });
 
       child.on('error', (err: Error) => {
         clearTimeout(timer);
-        reject(new Error(`Failed to start Python process: ${err.message}`));
+        reject(new Error(`Failed to start Python process (${pythonExecutable}): ${err.message}`));
       });
     });
   }

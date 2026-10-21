@@ -4,8 +4,8 @@
  * Mounts chatbot routes following the same convention as the rest of the project.
  *
  * Routes:
- *   POST /api/chatbot/intent  — intent classification only (auth required)
- *   POST /api/chatbot/ask     — full chatbot (auth + patient-access required)
+ *   POST /api/chatbot/intent — classifier-only endpoint (no patient data accessed; public/developer testing)
+ *   POST /api/chatbot/ask    — full chatbot flow (auth + patient-access authorization required)
  */
 
 import { Router } from 'express';
@@ -20,9 +20,6 @@ export function createChatbotRouter(
 ): Router {
   const router = Router();
 
-  // All chatbot routes require a valid JWT
-  router.use(requireAuth);
-
   /**
    * @openapi
    * /api/chatbot/intent:
@@ -32,9 +29,7 @@ export function createChatbotRouter(
    *       Passes the question to the Python ML classifier (TF-IDF + Logistic Regression)
    *       and returns the predicted intent and confidence score.
    *       Patient medical data is NEVER sent to the ML model.
-   *       Use this endpoint to test the intent classification layer in isolation.
-   *     security:
-   *       - bearerAuth: []
+   *       Does not query MongoDB or patient records.
    *     requestBody:
    *       required: true
    *       content:
@@ -59,11 +54,11 @@ export function createChatbotRouter(
    *                   example: medicine_timing
    *                 confidence:
    *                   type: number
-   *                   example: 0.94
+   *                   example: 0.83
    *       400:
-   *         description: Missing or invalid question
-   *       401:
-   *         description: Unauthorized
+   *         description: Missing or invalid request body
+   *       503:
+   *         description: Classifier service unavailable
    */
   router.post('/intent', chatbotController.intentOnly);
 
@@ -114,8 +109,10 @@ export function createChatbotRouter(
    *         description: Unauthorized
    *       403:
    *         description: Access denied for this patient
+   *       500:
+   *         description: Internal server error
    */
-  router.post('/ask', requirePatientAccess(userRepository), chatbotController.ask);
+  router.post('/ask', requireAuth, requirePatientAccess(userRepository), chatbotController.ask);
 
   return router;
 }

@@ -13,8 +13,10 @@ export function requirePatientAccess(userRepository: IUserRepository) {
 
       const targetId =
         (req.query['patient_id'] as string) ||
-        (req.body && req.body['patient_id']) ||
-        req.params['elderlyId'];
+        (req.query['patientId'] as string) ||
+        (req.body && (req.body['patient_id'] || req.body['patientId'])) ||
+        req.params['elderlyId'] ||
+        req.params['patientId'];
 
       // If targetId is not specified or equals callerId, access is allowed (accessing own data)
       if (!targetId || targetId === callerId) {

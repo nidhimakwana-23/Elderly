@@ -3,12 +3,13 @@ import { useAuth } from './context/AuthContext';
 import { MedicineManagement } from './components/MedicineManagement';
 import { MedicationTracker } from './pages/MedicationTracker';
 import { HealthCheckManagement } from './components/HealthCheckManagement';
+import { CareChatbot } from './pages/CareChatbot';
 import { AiChat } from './pages/AiChat';
 import { Login } from './pages/Login';
 import { MemberSwitcher } from './components/MemberSwitcher';
 import { MyProfile } from './pages/MyProfile';
 
-type Tab = 'tracker' | 'management' | 'health' | 'ai' | 'profile';
+type Tab = 'tracker' | 'management' | 'health' | 'chatbot' | 'ai' | 'profile';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -23,6 +24,7 @@ function App() {
     { id: 'tracker', label: 'Medication Tracker', emoji: '💊' },
     { id: 'management', label: 'Medicine Management', emoji: '📋' },
     { id: 'health', label: 'Health Checks', emoji: '❤️' },
+    { id: 'chatbot', label: 'Care Chatbot', emoji: '💬' },
     { id: 'ai', label: 'AI Assistant', emoji: '🤖' },
   ];
 
@@ -38,6 +40,8 @@ function App() {
               activeTab === tab.id
                 ? tab.id === 'ai'
                   ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                  : tab.id === 'chatbot'
+                  ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md'
                   : 'bg-indigo-100 text-indigo-700'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
@@ -68,6 +72,7 @@ function App() {
         {activeTab === 'tracker' && <MedicationTracker />}
         {activeTab === 'management' && <MedicineManagement />}
         {activeTab === 'health' && <HealthCheckManagement />}
+        {activeTab === 'chatbot' && <CareChatbot />}
         {activeTab === 'ai' && <AiChat />}
         {activeTab === 'profile' && <MyProfile />}
       </div>

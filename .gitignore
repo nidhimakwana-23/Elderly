@@ -125,3 +125,7 @@ Thumbs.db
 
 
 models
+*.js
+*.d.ts
+*.d.ts.map
+*.js.map

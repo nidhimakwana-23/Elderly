@@ -15,6 +15,7 @@ import { DoctorProfileSchema, CreateDoctorProfileDtoSchema } from './src/doctor/
 import { AppointmentSchema, CreateAppointmentDtoSchema } from './src/appointment/appointment.types';
 import { EmergencyRequestSchema, CreateEmergencyDtoSchema } from './src/emergency/emergency.types';
 import { PrescriptionSchema, CreatePrescriptionDtoSchema } from './src/prescription/prescription.types';
+import { ChatbotIntentRequestSchema, IntentPredictionSchema, ChatbotResponseSchema } from './src/chatbot/chatbot.types';
 
 // ─── DB Connection ────────────────────────────────────────────────────────────
 import { connectDB } from './src/db/mongoose/connection';
@@ -28,6 +29,7 @@ import { MongooseDoctorRepository } from './src/db/mongoose/mongoose.doctor.repo
 import { MongooseAppointmentRepository } from './src/db/mongoose/mongoose.appointment.repository';
 import { MongooseEmergencyRepository } from './src/db/mongoose/mongoose.emergency.repository';
 import { MongoosePrescriptionRepository } from './src/db/mongoose/mongoose.prescription.repository';
+import { MongooseConversationRepository } from './src/db/mongoose/mongoose.conversation.repository';
 
 // ─── Services ──────────────────────────────────────────────────────────────────────────
 import { AuthService } from './src/auth/auth.service';
@@ -67,13 +69,16 @@ import { createHealthTrendRouter } from './src/health-trend/health-trend.router'
 import { AiService } from './src/ai/ai.service';
 import { AiController } from './src/ai/ai.controller';
 import { createAiRouter } from './src/ai/ai.router';
+import { ChatbotService } from './src/chatbot/chatbot.service';
+import { ChatbotController } from './src/chatbot/chatbot.controller';
+import { createChatbotRouter } from './src/chatbot/chatbot.router';
 import { logger } from './src/utils/logger';
 
 const app = express();
 const port = process.env['PORT'] ?? 3001;
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
-app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }));
+app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3001'] }));
 app.use(express.json());
 
 // ─── Request / Response Logger ───────────────────────────────────────────────
@@ -101,6 +106,7 @@ const doctorRepository = new MongooseDoctorRepository();
 const appointmentRepository = new MongooseAppointmentRepository();
 const emergencyRepository = new MongooseEmergencyRepository();
 const prescriptionRepository = new MongoosePrescriptionRepository();
+const conversationRepository = new MongooseConversationRepository();
 
 const authService = new AuthService(userRepository);
 const familyService = new FamilyService(userRepository);
@@ -118,7 +124,8 @@ const healthTrendService = new HealthTrendService(
   prescriptionRepository,
   appointmentRepository,
 );
-const aiService = new AiService(healthCheckService, medicineLogsService, medicineService);
+const aiService = new AiService(healthCheckService, medicineLogsService, medicineService, conversationRepository);
+const chatbotService = new ChatbotService(medicineLogsService, healthCheckService, healthTrendService, medicineService);
 
 const authController = new AuthController(authService);
 const familyController = new FamilyController(familyService);
@@ -131,6 +138,7 @@ const emergencyController = new EmergencyController(emergencyService, doctorServ
 const prescriptionController = new PrescriptionController(prescriptionService);
 const healthTrendController = new HealthTrendController(healthTrendService);
 const aiController = new AiController(aiService);
+const chatbotController = new ChatbotController(chatbotService, userRepository);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api', (_req: Request, res: Response) => {
@@ -149,42 +157,7 @@ app.use('/api/emergency', createEmergencyRouter(emergencyController));
 app.use('/api/prescriptions', createPrescriptionRouter(prescriptionController));
 app.use('/api/health-trend', createHealthTrendRouter(healthTrendController));
 app.use('/api/ai', createAiRouter(aiController));
-
-// ─── 404 Handler ─────────────────────────────────────────────────────────────
-app.use((req: Request, res: Response): void => {
-  logger.warn(`[404] Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({
-    status: 'error',
-    statusCode: 404,
-    message: `Route not found: ${req.method} ${req.originalUrl}`,
-  });
-});
-
-// ─── Global Error Handler ─────────────────────────────────────────────────────
-// Must have exactly 4 parameters so Express recognises it as an error handler.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: unknown, _req: Request, res: Response, _next: NextFunction): void => {
-  const statusCode =
-    err instanceof Error && 'statusCode' in err && typeof (err as { statusCode: unknown }).statusCode === 'number'
-      ? (err as { statusCode: number }).statusCode
-      : 500;
-
-  const message = err instanceof Error ? err.message : 'Internal Server Error';
-
-  if (statusCode >= 500) {
-    logger.error('[ERROR] Unhandled exception caught by global error handler:', err);
-  } else {
-    logger.warn(`[WARN] Client error ${statusCode}: ${message}`);
-  }
-
-  if (res.headersSent) return;
-
-  res.status(statusCode).json({
-    status: 'error',
-    statusCode,
-    message,
-  });
-});
+app.use('/api/chatbot', createChatbotRouter(chatbotController, userRepository));
 
 // ─── OpenAPI / Scalar ─────────────────────────────────────────────────────────
 const swaggerOptions = {
@@ -231,6 +204,9 @@ const swaggerOptions = {
         Prescription: z.toJSONSchema(PrescriptionSchema, { target: 'openapi-3.0' }),
         CreatePrescriptionDto: z.toJSONSchema(CreatePrescriptionDtoSchema, { target: 'openapi-3.0' }),
         DoctorSignupInput: z.toJSONSchema(DoctorSignupInputSchema, { target: 'openapi-3.0' }),
+        ChatbotIntentRequest: z.toJSONSchema(ChatbotIntentRequestSchema, { target: 'openapi-3.0' }),
+        IntentPrediction: z.toJSONSchema(IntentPredictionSchema, { target: 'openapi-3.0' }),
+        ChatbotResponse: z.toJSONSchema(ChatbotResponseSchema, { target: 'openapi-3.0' }),
       },
     },
   },
@@ -239,20 +215,56 @@ const swaggerOptions = {
 
 const openapiSpec = swaggerJsdoc(swaggerOptions);
 
-app.get('/openapi.json', (req: Request, res: Response) => {
+app.get(['/openapi.json', '/api/openapi.json'], (req: Request, res: Response) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(openapiSpec);
 });
 
-app.use(
-  '/reference',
-  apiReference({
-    theme: 'purple',
-    spec: {
-      content: openapiSpec,
-    },
-  })
-);
+const referenceHandler = apiReference({
+  theme: 'purple',
+  spec: {
+    content: openapiSpec,
+  },
+});
+
+app.use('/reference', referenceHandler);
+app.use('/api/reference', referenceHandler);
+
+// ─── 404 Handler ─────────────────────────────────────────────────────────────
+app.use((req: Request, res: Response): void => {
+  logger.warn(`[404] Route not found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    status: 'error',
+    statusCode: 404,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
+});
+
+// ─── Global Error Handler ─────────────────────────────────────────────────────
+// Must have exactly 4 parameters so Express recognises it as an error handler.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction): void => {
+  const statusCode =
+    err instanceof Error && 'statusCode' in err && typeof (err as { statusCode: unknown }).statusCode === 'number'
+      ? (err as { statusCode: number }).statusCode
+      : 500;
+
+  const message = err instanceof Error ? err.message : 'Internal Server Error';
+
+  if (statusCode >= 500) {
+    logger.error('[ERROR] Unhandled exception caught by global error handler:', err);
+  } else {
+    logger.warn(`[WARN] Client error ${statusCode}: ${message}`);
+  }
+
+  if (res.headersSent) return;
+
+  res.status(statusCode).json({
+    status: 'error',
+    statusCode,
+    message,
+  });
+});
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 // Connect to MongoDB first, then start accepting HTTP requests.

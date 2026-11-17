@@ -1,0 +1,225 @@
+text,intent
+"Did mom take her medicine today?",medicine_today
+"Has she taken today's medicines?",medicine_today
+"Did she take her tablets today?",medicine_today
+"Has mother had her medicines today?",medicine_today
+"Did the patient take her pills today?",medicine_today
+"Were today's medicines taken?",medicine_today
+"Has she taken all her pills for today?",medicine_today
+"Did she have her morning medicine today?",medicine_today
+"Did my mother take her tablets this morning?",medicine_today
+"Was today's dose taken?",medicine_today
+"Have the medicines been given today?",medicine_today
+"Were her medicines administered today?",medicine_today
+"Did she finish her today's medications?",medicine_today
+"Is the patient's medicine for today done?",medicine_today
+"Has she received her medication today?",medicine_today
+"Did she take all pills today?",medicine_today
+"Were all today's tablets given?",medicine_today
+"Was the daily medication taken?",medicine_today
+"Did mom get her medicine today?",medicine_today
+"Has the elderly patient had her meds today?",medicine_today
+"Did she take her dose for today?",medicine_today
+"Were medicines given to her today?",medicine_today
+"Is today's medication done?",medicine_today
+"Did she have her pills this morning?",medicine_today
+"Has she taken everything today?",medicine_today
+"Did mother receive her medicines today?",medicine_today
+"Were all today's medications consumed?",medicine_today
+"Did she take any medicine so far today?",medicine_today
+"Are today's medicines done?",medicine_today
+"Was any medicine missed today?",medicine_today
+"Which medicine did she miss?",medicine_missed
+"Did she miss any medicines?",medicine_missed
+"How many medicines were missed?",medicine_missed
+"What medicines has she skipped?",medicine_missed
+"Were any medicines skipped recently?",medicine_missed
+"Which tablets did mom skip?",medicine_missed
+"Has the patient skipped any medication?",medicine_missed
+"What doses has she missed?",medicine_missed
+"Were there any missed tablets?",medicine_missed
+"Which medicines did she not take?",medicine_missed
+"Did mother skip any pills?",medicine_missed
+"Are there any pending medicines?",medicine_missed
+"Which of her medications are overdue?",medicine_missed
+"Has she missed any dosage?",medicine_missed
+"How many tablets were skipped?",medicine_missed
+"Are there skipped medicines this week?",medicine_missed
+"Did she miss the morning pills?",medicine_missed
+"Which drug did she not take yesterday?",medicine_missed
+"Any medicines she missed this week?",medicine_missed
+"What did she fail to take?",medicine_missed
+"Were there medicines she did not consume?",medicine_missed
+"Did she skip any medications this week?",medicine_missed
+"What medicines have been left out?",medicine_missed
+"Did she forget any tablet?",medicine_missed
+"Which dose has she skipped?",medicine_missed
+"Were there missed or skipped medicines recently?",medicine_missed
+"How often does she miss her medicines?",medicine_missed
+"Has she been skipping any pills?",medicine_missed
+"Which medicines were not taken?",medicine_missed
+"Are there any missed doses?",medicine_missed
+"Is she taking her medicine on time?",medicine_timing
+"Does she take medicines at the scheduled time?",medicine_timing
+"Are her medicines being taken on time?",medicine_timing
+"Is she taking her tablets at the right time?",medicine_timing
+"Does she take pills as scheduled?",medicine_timing
+"Is the patient timely with her medications?",medicine_timing
+"Does mom take medicine at the scheduled hour?",medicine_timing
+"Is she punctual about her medicine schedule?",medicine_timing
+"Does she take her pills at the correct time?",medicine_timing
+"How delayed is she in taking her medicines?",medicine_timing
+"Does she take her dose on time?",medicine_timing
+"Is she late in taking her medications?",medicine_timing
+"Are medicines being given at the right time?",medicine_timing
+"Does she take her medicine as per schedule?",medicine_timing
+"Is mom consistent about medicine timing?",medicine_timing
+"Does she follow the medicine schedule?",medicine_timing
+"Are pills taken at the scheduled hour?",medicine_timing
+"Is there a delay in her medicine intake?",medicine_timing
+"Does she take her tablets on schedule?",medicine_timing
+"Is she managing medicine timing well?",medicine_timing
+"Does she usually take medicine at the right time?",medicine_timing
+"How is her punctuality with medicines?",medicine_timing
+"Is she late in having her medicines?",medicine_timing
+"Is mother taking her pills on time?",medicine_timing
+"Are her meds taken at the appropriate time?",medicine_timing
+"Does she stick to the medicine timing?",medicine_timing
+"Does the patient follow medicine timings?",medicine_timing
+"Is she adhering to the medicine schedule?",medicine_timing
+"How regularly is she taking her medicines?",medicine_pattern
+"What is her medicine adherence pattern?",medicine_pattern
+"Is she frequently missing medicines?",medicine_pattern
+"What is her overall medicine adherence?",medicine_pattern
+"How consistent is she with her medications?",medicine_pattern
+"Does she take medicines regularly?",medicine_pattern
+"What is the adherence rate for her medicines?",medicine_pattern
+"How often does she take her medicines correctly?",medicine_pattern
+"How good is her medication compliance?",medicine_pattern
+"Is she regular with her medicines?",medicine_pattern
+"What percentage of medicines does she take?",medicine_pattern
+"Is she consistent about her medication schedule?",medicine_pattern
+"How reliable is mom with her medicines?",medicine_pattern
+"What is her weekly medicine adherence?",medicine_pattern
+"Is she keeping up with her medicine routine?",medicine_pattern
+"How disciplined is she about medicines?",medicine_pattern
+"What is the pattern of her medicine intake?",medicine_pattern
+"How many days does she take all her medicines?",medicine_pattern
+"What is her long-term adherence to medicine?",medicine_pattern
+"Is she regularly skipping her medicines?",medicine_pattern
+"What does her medication compliance look like?",medicine_pattern
+"How well does she follow her drug schedule?",medicine_pattern
+"Does she follow a regular medicine routine?",medicine_pattern
+"How is her overall medication pattern?",medicine_pattern
+"Is there a trend in her medicine misses?",medicine_pattern
+"What percentage of prescribed doses does she take?",medicine_pattern
+"How is her medicine compliance this month?",medicine_pattern
+"How is her sugar recently?",sugar_trend
+"Has her blood sugar increased recently?",sugar_trend
+"What is the recent sugar trend?",sugar_trend
+"How has her blood glucose been?",sugar_trend
+"Is her sugar level going up?",sugar_trend
+"What is her recent blood sugar?",sugar_trend
+"Is her glucose increasing?",sugar_trend
+"How is mom's blood sugar trending?",sugar_trend
+"Has her sugar level changed recently?",sugar_trend
+"What is the sugar level trend?",sugar_trend
+"Is her blood glucose normal recently?",sugar_trend
+"How has her sugar been in the past few days?",sugar_trend
+"Is her sugar level improving?",sugar_trend
+"What is the recent glucose trend?",sugar_trend
+"How is her diabetes control recently?",sugar_trend
+"Has her blood sugar spiked lately?",sugar_trend
+"What has been her sugar level this week?",sugar_trend
+"Is her blood sugar fluctuating?",sugar_trend
+"Has her sugar dropped recently?",sugar_trend
+"How is her glucose level trend?",sugar_trend
+"Is the patient's blood sugar under control?",sugar_trend
+"What does the recent sugar data show?",sugar_trend
+"Has her glycemic level changed?",sugar_trend
+"Is her sugar stable recently?",sugar_trend
+"How has her blood sugar reading been?",sugar_trend
+"Is her sugar rising or falling?",sugar_trend
+"What is her glucose trending at?",sugar_trend
+"How has her blood pressure been?",bp_trend
+"Is her BP increasing?",bp_trend
+"What is the recent BP trend?",bp_trend
+"How is mom's blood pressure recently?",bp_trend
+"Is her blood pressure going up?",bp_trend
+"Has her BP changed recently?",bp_trend
+"What is the blood pressure trend?",bp_trend
+"Is her blood pressure stable?",bp_trend
+"Has her BP been high recently?",bp_trend
+"How has her systolic pressure changed?",bp_trend
+"Is her hypertension worsening?",bp_trend
+"What does her recent blood pressure show?",bp_trend
+"Has her BP fluctuated lately?",bp_trend
+"Is her pressure going down?",bp_trend
+"How is her BP trending this week?",bp_trend
+"Has her blood pressure spiked?",bp_trend
+"Is the patient's BP normal recently?",bp_trend
+"Has her pressure improved recently?",bp_trend
+"What is her recent BP reading?",bp_trend
+"Is her diastolic pressure stable?",bp_trend
+"How is her blood pressure looking?",bp_trend
+"Has her BP gone up or down lately?",bp_trend
+"Is her pressure controlled recently?",bp_trend
+"What has her BP been like?",bp_trend
+"Has there been any change in her blood pressure?",bp_trend
+"Is her blood pressure increasing or decreasing?",bp_trend
+"How is her cardiovascular pressure recently?",bp_trend
+"Has her weight changed recently?",weight_trend
+"What is her recent weight trend?",weight_trend
+"Has she gained or lost weight?",weight_trend
+"How is mom's weight recently?",weight_trend
+"Is she gaining weight?",weight_trend
+"Has her weight increased?",weight_trend
+"Is she losing weight?",weight_trend
+"What is the weight trend?",weight_trend
+"How much does she weigh recently?",weight_trend
+"Has her body weight changed?",weight_trend
+"Is her weight stable?",weight_trend
+"How has her weight been this month?",weight_trend
+"What does her recent weight data show?",weight_trend
+"Is she getting heavier?",weight_trend
+"Has there been weight gain recently?",weight_trend
+"Is the patient's weight going up?",weight_trend
+"How is her BMI trending?",weight_trend
+"Has her mass changed in the last few weeks?",weight_trend
+"Is she putting on weight?",weight_trend
+"Has she lost any weight recently?",weight_trend
+"How significant is her weight change?",weight_trend
+"What is her current weight trend?",weight_trend
+"Has her weight fluctuated?",weight_trend
+"How is she doing weight-wise?",weight_trend
+"Is her weight increasing or decreasing?",weight_trend
+"Has her weight gone up or down?",weight_trend
+"How has her overall weight changed?",weight_trend
+"Give me her recent health summary",health_summary
+"How has her health been recently?",health_summary
+"What is her overall recent health status?",health_summary
+"Give me a health overview for mom",health_summary
+"What is the recent health update?",health_summary
+"How is she doing health-wise?",health_summary
+"Can you give me a health report?",health_summary
+"What is her current health condition?",health_summary
+"How is the patient doing overall?",health_summary
+"Give me a summary of her health",health_summary
+"What does her recent health data show?",health_summary
+"How is her overall health recently?",health_summary
+"Give a full health summary",health_summary
+"What is her health status this week?",health_summary
+"What is the general health status of the patient?",health_summary
+"How is mom doing in general?",health_summary
+"Can you summarise her health status?",health_summary
+"What is her overall wellness recently?",health_summary
+"Give me all her recent health information",health_summary
+"What is the patient's health like recently?",health_summary
+"How has mother been healthwise?",health_summary
+"Give a complete recent health overview",health_summary
+"What is her general condition recently?",health_summary
+"How is her health trend overall?",health_summary
+"What is the comprehensive health summary?",health_summary
+"Is she in good health recently?",health_summary
+"What does her overall health record look like?",health_summary
+"Tell me about her health",health_summary

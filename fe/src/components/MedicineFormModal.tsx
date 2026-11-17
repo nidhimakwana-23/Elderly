@@ -1,8 +1,11 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { parseISO, format, isValid } from 'date-fns';
 import { MedicineSchema, type Medicine, type CreateMedicineDto } from '../types/medicine';
+
 
 interface Props {
   isOpen: boolean;
@@ -16,7 +19,7 @@ const FREQUENCIES = ['Once Daily', 'Twice Daily', 'Three Times Daily', 'Four Tim
 const TIMINGS = ['Before Breakfast', 'After Breakfast', 'Before Lunch', 'After Lunch', 'Before Dinner', 'After Dinner', 'Before Sleep'];
 
 export function MedicineFormModal({ isOpen, onClose, onSave, initialData }: Props) {
-  const { register, handleSubmit, watch, formState: { errors }, reset, setValue } = useForm<Medicine>({
+  const { register, control, handleSubmit, watch, formState: { errors }, reset, setValue } = useForm<Medicine>({
     resolver: zodResolver(MedicineSchema) as any,
     defaultValues: initialData || {
       medicine_type: 'Tablet',
@@ -108,13 +111,95 @@ export function MedicineFormModal({ isOpen, onClose, onSave, initialData }: Prop
 
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-700">Start Date *</label>
-              <input type="date" {...register('start_date')} className="input-field" />
+              <Controller
+                name="start_date"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ? parseISO(field.value) : null}
+                    onChange={(date) => {
+                      if (date && isValid(date)) {
+                        field.onChange(format(date, 'yyyy-MM-dd'));
+                      } else {
+                        field.onChange('');
+                      }
+                    }}
+                    format="yyyy-MM-dd"
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        error: !!errors.start_date,
+                        sx: {
+                          width: '100%',
+                          '& .MuiInputBase-root': {
+                            borderRadius: '0.75rem',
+                            backgroundColor: '#ffffff',
+                            fontSize: '0.875rem',
+                          },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#e2e8f0',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#cbd5e1',
+                          },
+                          '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#0d9488 !important',
+                            borderWidth: '1px !important',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                )}
+              />
               {errors.start_date && <p className="text-red-500 text-xs">{errors.start_date.message}</p>}
             </div>
 
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-700">End Date</label>
-              <input type="date" {...register('end_date')} className="input-field" />
+              <Controller
+                name="end_date"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ? parseISO(field.value) : null}
+                    onChange={(date) => {
+                      if (date && isValid(date)) {
+                        field.onChange(format(date, 'yyyy-MM-dd'));
+                      } else {
+                        field.onChange('');
+                      }
+                    }}
+                    format="yyyy-MM-dd"
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        error: !!errors.end_date,
+                        sx: {
+                          width: '100%',
+                          '& .MuiInputBase-root': {
+                            borderRadius: '0.75rem',
+                            backgroundColor: '#ffffff',
+                            fontSize: '0.875rem',
+                          },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#e2e8f0',
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#cbd5e1',
+                          },
+                          '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#0d9488 !important',
+                            borderWidth: '1px !important',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                )}
+              />
               {errors.end_date && <p className="text-red-500 text-xs">{errors.end_date.message}</p>}
             </div>
           </div>
@@ -127,11 +212,10 @@ export function MedicineFormModal({ isOpen, onClose, onSave, initialData }: Prop
                   type="button"
                   key={time}
                   onClick={() => toggleTiming(time)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                    selectedTimings.includes(time) 
-                      ? 'bg-primary-100 border-primary-300 text-primary-700'
-                      : 'bg-white border-surface-200 text-slate-600 hover:bg-surface-50'
-                  }`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${selectedTimings.includes(time)
+                    ? 'bg-primary-100 border-primary-300 text-primary-700'
+                    : 'bg-white border-surface-200 text-slate-600 hover:bg-surface-50'
+                    }`}
                 >
                   {time}
                 </button>
@@ -147,9 +231,9 @@ export function MedicineFormModal({ isOpen, onClose, onSave, initialData }: Prop
           {reminderEnabled && (
             <div className="space-y-1 p-4 border border-primary-100 bg-primary-50 rounded-xl">
               <label className="text-sm font-medium text-primary-800">Reminder Times</label>
-              <input 
-                type="text" 
-                placeholder="e.g. 08:00 AM, 08:00 PM (comma separated)" 
+              <input
+                type="text"
+                placeholder="e.g. 08:00 AM, 08:00 PM (comma separated)"
                 className="input-field"
                 onChange={(e) => {
                   const times = e.target.value.split(',').map(s => s.trim()).filter(Boolean);

@@ -8,8 +8,16 @@ import { AiChat } from './pages/AiChat';
 import { Login } from './pages/Login';
 import { MemberSwitcher } from './components/MemberSwitcher';
 import { MyProfile } from './pages/MyProfile';
+import { FallDetectionDemoPage } from './features/fall-detection/pages/FallDetectionDemoPage';
 
-type Tab = 'tracker' | 'management' | 'health' | 'chatbot' | 'ai' | 'profile';
+type Tab =
+  | 'tracker'
+  | 'management'
+  | 'health'
+  | 'chatbot'
+  | 'ai'
+  | 'fall-detection'
+  | 'profile';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -26,6 +34,7 @@ function App() {
     { id: 'health', label: 'Health Checks', emoji: '❤️' },
     { id: 'chatbot', label: 'Care Chatbot', emoji: '💬' },
     { id: 'ai', label: 'AI Assistant', emoji: '🤖' },
+    { id: 'fall-detection', label: 'Fall Detection Demo', emoji: '🚶' },
   ];
 
   return (
@@ -74,6 +83,7 @@ function App() {
         {activeTab === 'health' && <HealthCheckManagement />}
         {activeTab === 'chatbot' && <CareChatbot />}
         {activeTab === 'ai' && <AiChat />}
+        {activeTab === 'fall-detection' && <FallDetectionDemoPage />}
         {activeTab === 'profile' && <MyProfile />}
       </div>
     </div>

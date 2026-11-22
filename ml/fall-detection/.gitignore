@@ -1,0 +1,43 @@
+# Python virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# Local raw and interim data (preserve README.md and .gitkeep)
+data/raw/*
+!data/raw/README.md
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/README.md
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/README.md
+!data/processed/.gitkeep
+
+# Generated manifests from local runs (keep example manifest)
+manifests/dataset_manifest.json
+manifests/split_manifest.json
+!manifests/dataset_manifest.example.json
+
+# Models and generated artifacts (ignore binaries)
+models/*
+!models/README.md
+!models/.gitkeep
+
+# Evaluation and run reports
+reports/*
+!reports/README.md
+!reports/.gitkeep

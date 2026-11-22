@@ -1,0 +1,59 @@
+pipeline:
+  name: "fall-detection-baseline"
+  version: "1.0.0"
+
+data:
+  manifest_path: "manifests/dataset_manifest.json"
+  raw_dir: "data/raw"
+  interim_dir: "data/interim"
+  processed_dir: "data/processed"
+  reports_dir: "reports"
+  models_dir: "models"
+  schema_version: "1.0.0"
+  expected_landmark_count: 33
+
+preprocessing:
+  target_cadence_hz: 20.0
+  max_gap_interpolation_ms: 350
+  min_landmark_visibility: 0.3
+  min_valid_landmarks_per_frame: 11
+  min_valid_frames_ratio: 0.6
+  normalize_coordinates: true
+  normalization_method: "hip_centered_torso_scaled"
+
+windowing:
+  window_duration_s: 2.5
+  window_stride_s: 0.5
+  min_frames_per_window: 25
+  fall_event_min_overlap_ms: 500
+  ambiguous_margin_ms: 200
+
+features:
+  feature_set: "geometry_temporal_quality" # geometry_only | geometry_temporal | geometry_temporal_quality
+  smoothing_window_size: 3
+
+splitting:
+  strategy: "grouped_by_subject" # grouped_by_subject | grouped_by_session
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  random_seed: 42
+
+training:
+  models:
+    random_forest:
+      n_estimators: 100
+      max_depth: 8
+      min_samples_split: 4
+      class_weight: "balanced"
+      random_state: 42
+    logistic_regression:
+      C: 1.0
+      max_iter: 1000
+      class_weight: "balanced"
+      random_state: 42
+  selected_model: "random_forest"
+
+evaluation:
+  threshold_metric: "f1"
+  default_threshold: 0.50

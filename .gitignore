@@ -135,3 +135,9 @@ models
 !fe/public/wasm/**
 !fe/public/models/
 !fe/public/models/**
+
+# Allow ml/fall-detection models directory structure
+!ml/fall-detection/models/
+!ml/fall-detection/models/**
+ml/fall-detection/models/*.joblib
+ml/fall-detection/models/**/*.joblib

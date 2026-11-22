@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "metadata": {
+    "description": "Example dataset manifest for fall detection sequences.",
+    "documentation": "Each entry maps an anonymized sequence to a subject, session, class label, and event bounds."
+  },
+  "sequences": [
+    {
+      "sequence_id": "example-fall-001",
+      "path": "data/raw/example-fall-001.json",
+      "schema_version": "1.0.0",
+      "label": "fall",
+      "subject_id": "subject-001",
+      "session_id": "session-001",
+      "source_dataset": "consented-capture",
+      "event_start_ms": 1200,
+      "event_end_ms": 2200,
+      "camera_view": "front",
+      "activity_type": "fall_forward",
+      "notes": "Trip fall while walking forward."
+    },
+    {
+      "sequence_id": "example-normal-001",
+      "path": "data/raw/example-normal-001.json",
+      "schema_version": "1.0.0",
+      "label": "normal",
+      "subject_id": "subject-001",
+      "session_id": "session-001",
+      "source_dataset": "consented-capture",
+      "camera_view": "front",
+      "activity_type": "sitting",
+      "notes": "Hard negative: intentional chair transition."
+    }
+  ]
+}

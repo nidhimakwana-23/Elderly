@@ -260,12 +260,11 @@ export const PoseStatusPanel: React.FC<PoseStatusPanelProps> = ({
         <Info className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
         <div className="text-xs text-indigo-950 leading-relaxed">
           <span className="font-semibold text-indigo-900 block mb-0.5">
-            Milestone A – Live Pose Tracking Demo
+            Milestone B – Pose Sequence Capture
           </span>
-          This page demonstrates live browser-based pose landmark detection using
-          Google MediaPipe. It visualizes the body skeleton in real time for research
-          and testing. It does <strong>not</strong> classify falls, predict risk,
-          or trigger emergency alerts.
+          This tool captures live browser-based pose landmarks and buffers motion sequences
+          locally for research and dataset preparation. It does <strong>not</strong> classify falls,
+          predict fall risk, or trigger emergency caregiver alerts.
         </div>
       </div>
     </div>

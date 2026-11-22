@@ -2,8 +2,10 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { CameraPreview } from '../components/CameraPreview';
 import { PoseOverlay } from '../components/PoseOverlay';
 import { PoseStatusPanel } from '../components/PoseStatusPanel';
+import { PoseSequencePanel } from '../components/PoseSequencePanel';
 import { useCamera } from '../hooks/useCamera';
 import { usePoseLandmarker } from '../hooks/usePoseLandmarker';
+import { usePoseSequenceCapture } from '../hooks/usePoseSequenceCapture';
 import { clearCanvas, drawPose } from '../utils/poseDrawing';
 import type { PosePresenceStatus, PoseStats } from '../types/pose.types';
 
@@ -46,6 +48,20 @@ export const FallDetectionDemoPage: React.FC = () => {
     initModel,
     close: closeLandmarker,
   } = usePoseLandmarker();
+
+  const {
+    captureState,
+    bufferStats,
+    startCapture,
+    stopCapture,
+    clearCapture,
+    exportSequence,
+    ingestInferenceResult,
+  } = usePoseSequenceCapture();
+
+  // Ref to access ingestInferenceResult without re-binding the inference loop
+  const ingestRef = useRef(ingestInferenceResult);
+  ingestRef.current = ingestInferenceResult;
 
   // Stop the frame inference loop
   const stopLoop = useCallback(() => {
@@ -114,6 +130,9 @@ export const FallDetectionDemoPage: React.FC = () => {
           const result = landmarker.detectForVideo(video, timestampMs);
           const endTime = performance.now();
           lastInferenceDurationRef.current = endTime - startTime;
+
+          // Milestone B: Ingest result into rolling buffer
+          ingestRef.current(result, timestampMs);
 
           const ctx = canvas.getContext('2d');
           if (ctx) {
@@ -195,10 +214,11 @@ export const FallDetectionDemoPage: React.FC = () => {
     animationFrameIdRef.current = requestAnimationFrame(runInferenceLoop);
   }, [startCamera, initModel, videoRef, runInferenceLoop]);
 
-  // Master Stop handler
+  // Master Stop handler: stops camera and stops sequence capture if active
   const handleStop = useCallback(() => {
     stopLoop();
     stopCamera();
+    stopCapture();
     setPoseStatus('idle');
     setStats({
       fps: 0,
@@ -206,7 +226,7 @@ export const FallDetectionDemoPage: React.FC = () => {
       lastInferenceTimeMs: 0,
     });
     setVideoResolution(null);
-  }, [stopLoop, stopCamera]);
+  }, [stopLoop, stopCamera, stopCapture]);
 
   // Retry handler
   const handleRetry = useCallback(async () => {
@@ -229,28 +249,28 @@ export const FallDetectionDemoPage: React.FC = () => {
   }, [stopLoop, stopCamera, closeLandmarker]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
-            Milestone A
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+            Milestone B
           </span>
-          <span className="text-xs text-gray-500">Live Pose Landmark Visualization</span>
+          <span className="text-xs text-gray-500">Pose Sequence Capture & Rolling Buffer</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Fall Detection – Pose Tracking Demo
+          Fall Detection – Pose Tracking & Sequence Recording
         </h1>
         <p className="text-sm text-gray-600 mt-1">
-          Real-time body landmark detection using Google MediaPipe Pose Landmarker for Web.
-          This milestone visualizes the skeleton overlay to verify live tracking before ML fall classification.
+          Captures live MediaPipe body landmarks into a bounded rolling sequence buffer.
+          Frames are serialized with monotonic timestamps and exported as privacy-safe JSON sequences for offline dataset modeling (Milestone C).
         </p>
       </div>
 
       {/* Main Interactive Stage */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Camera Preview & Canvas Overlay */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-7 space-y-4">
           <CameraPreview
             videoRef={videoRef}
             cameraStatus={cameraStatus}
@@ -265,8 +285,8 @@ export const FallDetectionDemoPage: React.FC = () => {
           </CameraPreview>
         </div>
 
-        {/* Right Column: Status & Controls Panel */}
-        <div className="lg:col-span-4">
+        {/* Right Column: Status, Controls & Rolling Buffer Panels */}
+        <div className="lg:col-span-5 space-y-6">
           <PoseStatusPanel
             cameraStatus={cameraStatus}
             modelStatus={modelStatus}
@@ -279,6 +299,16 @@ export const FallDetectionDemoPage: React.FC = () => {
             onStop={handleStop}
             onToggleMirror={handleToggleMirror}
             onRetry={handleRetry}
+          />
+
+          <PoseSequencePanel
+            captureState={captureState}
+            bufferStats={bufferStats}
+            isCameraReady={cameraStatus === 'ready'}
+            onStartCapture={startCapture}
+            onStopCapture={stopCapture}
+            onClearCapture={clearCapture}
+            onExport={exportSequence}
           />
         </div>
       </div>

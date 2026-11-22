@@ -53,3 +53,5 @@ export interface DrawPoseOptions {
 }
 
 export type { NormalizedLandmark, PoseLandmarkerResult };
+export * from './pose-sequence.types';
+

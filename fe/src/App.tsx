@@ -9,6 +9,9 @@ import { Login } from './pages/Login';
 import { MemberSwitcher } from './components/MemberSwitcher';
 import { MyProfile } from './pages/MyProfile';
 import { FallDetectionDemoPage } from './features/fall-detection/pages/FallDetectionDemoPage';
+import { FallEventHistoryPage } from './features/fall-detection/pages/FallEventHistoryPage';
+import { CaregiverAlertBanner } from './features/fall-detection/components/CaregiverAlertBanner';
+import { useFallEvents } from './features/fall-detection/hooks/useFallEvents';
 
 type Tab =
   | 'tracker'
@@ -17,11 +20,20 @@ type Tab =
   | 'chatbot'
   | 'ai'
   | 'fall-detection'
+  | 'fall-history'
   | 'profile';
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('tracker');
+
+  const isCaregiver = user?.role === 'family';
+  const { events, acknowledge } = useFallEvents(isCaregiver);
+
+  // Unresolved active events for alert banner
+  const unresolvedEvents = isCaregiver
+    ? events.filter((e) => ['suspected', 'awaiting_response', 'acknowledged'].includes(e.status))
+    : [];
 
   // Show login screen when user is not authenticated
   if (!isAuthenticated) {
@@ -35,10 +47,18 @@ function App() {
     { id: 'chatbot', label: 'Care Chatbot', emoji: '💬' },
     { id: 'ai', label: 'AI Assistant', emoji: '🤖' },
     { id: 'fall-detection', label: 'Fall Detection Demo', emoji: '🚶' },
+    { id: 'fall-history', label: 'Fall Incidents', emoji: '🚨' },
   ];
 
   return (
     <div className="min-h-screen bg-surface-50 flex flex-col">
+      {/* High-priority caregiver alert banner */}
+      <CaregiverAlertBanner
+        unresolvedEvents={unresolvedEvents}
+        onViewEvents={() => setActiveTab('fall-history')}
+        onAcknowledge={acknowledge}
+      />
+
       <nav className="bg-white shadow-sm border-b px-4 py-3 flex gap-2 flex-wrap justify-between items-center">
         <div className="flex gap-1">
         {tabs.map((tab) => (
@@ -83,7 +103,12 @@ function App() {
         {activeTab === 'health' && <HealthCheckManagement />}
         {activeTab === 'chatbot' && <CareChatbot />}
         {activeTab === 'ai' && <AiChat />}
-        {activeTab === 'fall-detection' && <FallDetectionDemoPage />}
+        {activeTab === 'fall-detection' && (
+          <FallDetectionDemoPage
+            onNavigateToHistory={() => setActiveTab('fall-history')}
+          />
+        )}
+        {activeTab === 'fall-history' && <FallEventHistoryPage />}
         {activeTab === 'profile' && <MyProfile />}
       </div>
     </div>

@@ -173,3 +173,61 @@ When developing the classifier in Milestone C:
 1. **Cadence Resampling:** Input sequences reflect real-world browser capture cadence (~25–35 FPS). Use linear or spline interpolation in your preprocessing pipeline to resample windows to a uniform time-step (e.g. 30 Hz or 20 Hz fixed steps) rather than altering raw capture timestamps.
 2. **Missing Landmarks / Occlusion:** Check each landmark's `visibility` score and `quality.validLandmarkCount`. Frames with partial body visibility should be normalized relative to visible torso keypoints (e.g. shoulders #11/#12 and hips #23/#24).
 3. **Window Extraction:** Recommended sliding window for fall dynamics is 2.0–3.0 seconds (e.g. 60–90 frames at 30 FPS).
+
+---
+
+# Milestone D: Real-Time ML Fall Detection & Caregiver Escalation
+
+Milestone D integrates the trained Milestone C Random Forest classifier (`random_forest_baseline` v1.0.0) into the live frontend application, implementing real-time continuous inference, temporal confirmation, elderly user confirmation, and caregiver notifications.
+
+## 1. End-to-End Workflow
+
+```text
+Browser Video Frame
+       │
+       ▼
+MediaPipe Pose Landmarker (33 Body Landmarks)
+       │
+       ▼
+Pose Frame Serializer (PoseFrame Schema 1.0.0)
+       │
+       ▼
+Inference Window Buffer (Rolling 2.5s window, 500ms stride)
+       │
+       ▼
+Authenticated Express Backend Proxy (/api/fall-detection/predict)
+       │
+       ▼
+Internal Python FastAPI Service (POST /internal/v1/predict)
+       │
+       ▼
+FallClassifier.predict() (scikit-learn Random Forest model)
+       │
+       ▼
+Temporal Confirmation Engine (2 consecutive high-risk windows >= 0.1 threshold)
+       │
+  ┌────┴─────────────────────────────┐
+  ▼                                  ▼
+Normal Movement               Candidate / Suspected Fall
+                                     │
+                                     ▼
+                       Elderly Confirmation Dialog
+                       (15-second visual & audio countdown)
+                                     │
+                       ┌─────────────┴─────────────┐
+                       ▼                           ▼
+                 "I'm Okay"               "I Need Help" / Timeout
+                       │                           │
+                       ▼                           ▼
+                 Mark False Alarm          Persist Fall Event
+                 & Enter Cooldown          & Dispatch Caregiver Alert
+```
+
+## 2. Key Modules & Components
+
+- **`InferenceWindowBuffer` (`utils/inferenceWindowBuffer.ts`)**: Continuous temporal buffer collecting pose frames, enforcing minimum frame counts (25 frames) and temporal stride (500ms) without overlapping requests.
+- **`TemporalConfirmationEngine` (`utils/temporalConfirmationEngine.ts`)**: State machine implementing temporal confirmation (`idle` -> `monitoring` -> `candidate` -> `suspected_fall` -> `awaiting_response` -> `alert_sent` -> `cooldown`). Prevents single anomalous frames from triggering false alarms.
+- **`FallConfirmationDialog` (`components/FallConfirmationDialog.tsx`)**: Prominent modal with Web Audio alert sound, 15-second countdown timer, and large touch targets for "I'm Okay" and "I Need Help".
+- **`FallDetectionStatus` (`components/FallDetectionStatus.tsx`)**: Real-time diagnostic panel displaying model version, latency in ms, inference FPS, and fall probability gauge with 10% threshold marker.
+- **`CaregiverAlertBanner` (`components/CaregiverAlertBanner.tsx`)**: Top-level alert notification displayed to linked family members/caregivers for active unresolved events.
+- **`FallEventHistoryPage` (`pages/FallEventHistoryPage.tsx`)**: Comprehensive historical incident viewer with filtering across active, acknowledged, resolved, and false alarm statuses.

@@ -304,3 +304,32 @@ Milestone D will connect this classifier to the product application:
 2. **Online Rolling Assessment:** Form rolling windows from live browser MediaPipe landmark streams every $500\text{ ms}$.
 3. **Temporal Confirmation Filter:** Require consecutive elevated fall scores across multiple windows (e.g. 2 of 3 windows) plus post-fall inactivity before confirming an event.
 4. **Caregiver Workflow:** Persist confirmed fall events to the database and dispatch caregiver notifications with opt-in user acknowledgement.
+
+---
+
+# Milestone D: Python Inference Service
+
+The module provides an internal FastAPI service that loads the trained model bundle at startup and serves low-latency predictions over HTTP.
+
+### Running the Inference Service
+
+```bash
+cd ml/fall-detection
+source .venv/bin/activate
+uvicorn service.app:app --host 0.0.0.0 --port 8000
+```
+
+### Endpoints
+
+- `GET /health` — Service health check & model loaded status
+- `GET /internal/v1/model-info` — Metadata of loaded classifier (name, version, threshold, feature names)
+- `POST /internal/v1/predict` — Evaluate a sequence of serialized pose frames
+
+### Configuration Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `MODEL_PATH` | `models/random_forest_baseline` | Path to versioned model bundle folder |
+| `PORT` | `8000` | Port for inference HTTP server |
+| `HOST` | `0.0.0.0` | Bind host address |
+| `LOG_LEVEL` | `info` | Logging verbosity |

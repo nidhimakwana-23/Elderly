@@ -22,4 +22,13 @@ export interface IUserRepository {
 
   /** Get all family profiles linked to a given user ID. */
   getFamilyProfilesByUserId(linkedToUserId: string): Promise<FamilyProfile[]>;
+
+  /** Find a user by their user ID. Returns undefined if not found. */
+  findById?(id: string): Promise<User | undefined>;
+
+  /** Get IDs of all caregivers linked to this patient. */
+  getLinkedCaregiverIds?(patientId: string): Promise<string[]>;
+
+  /** Get IDs of all patients linked to this caregiver. */
+  getLinkedPatientIds?(caregiverId: string): Promise<string[]>;
 }

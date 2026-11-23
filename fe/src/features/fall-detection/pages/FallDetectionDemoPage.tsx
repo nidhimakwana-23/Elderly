@@ -3,13 +3,26 @@ import { CameraPreview } from '../components/CameraPreview';
 import { PoseOverlay } from '../components/PoseOverlay';
 import { PoseStatusPanel } from '../components/PoseStatusPanel';
 import { PoseSequencePanel } from '../components/PoseSequencePanel';
+import { FallDetectionStatus } from '../components/FallDetectionStatus';
+import { FallConfirmationDialog } from '../components/FallConfirmationDialog';
 import { useCamera } from '../hooks/useCamera';
 import { usePoseLandmarker } from '../hooks/usePoseLandmarker';
 import { usePoseSequenceCapture } from '../hooks/usePoseSequenceCapture';
+import { useFallDetection } from '../hooks/useFallDetection';
+import { useFallConfirmation } from '../hooks/useFallConfirmation';
 import { clearCanvas, drawPose } from '../utils/poseDrawing';
+import { serializePoseResult } from '../utils/poseSerializer';
+import { EXPECTED_LANDMARK_COUNT, type PoseFrame } from '../types/pose-sequence.types';
 import type { PosePresenceStatus, PoseStats } from '../types/pose.types';
+import { History } from 'lucide-react';
 
-export const FallDetectionDemoPage: React.FC = () => {
+interface FallDetectionDemoPageProps {
+  onNavigateToHistory?: () => void;
+}
+
+export const FallDetectionDemoPage: React.FC<FallDetectionDemoPageProps> = ({
+  onNavigateToHistory,
+}) => {
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
   const [poseStatus, setPoseStatus] = useState<PosePresenceStatus>('idle');
   const [stats, setStats] = useState<PoseStats>({
@@ -27,6 +40,7 @@ export const FallDetectionDemoPage: React.FC = () => {
   const animationFrameIdRef = useRef<number | null>(null);
   const isProcessingRef = useRef<boolean>(false);
   const lastTimestampMsRef = useRef<number>(0);
+  const liveFrameIndexRef = useRef<number>(0);
 
   // Throttled stats tracking
   const frameCountRef = useRef<number>(0);
@@ -58,6 +72,44 @@ export const FallDetectionDemoPage: React.FC = () => {
     exportSequence,
     ingestInferenceResult,
   } = usePoseSequenceCapture();
+
+  // Confirmation hook
+  const {
+    isOpen: isConfirmOpen,
+    secondsRemaining,
+    activeFallScore,
+    isSubmitting: isConfirmSubmitting,
+    triggerConfirmation,
+    handleImOkay,
+    handleNeedHelp,
+  } = useFallConfirmation({
+    onAlertDispatched: () => {
+      engine.enterCooldown();
+      setMonitoringState('alert_sent');
+    },
+    onCancelled: () => {
+      engine.enterCooldown();
+      setMonitoringState('cooldown');
+    },
+  });
+
+  // Real-time ML Fall Detection hook
+  const {
+    monitoringState,
+    stats: inferenceStats,
+    engine,
+    startMonitoring,
+    stopMonitoring,
+    ingestPoseFrame,
+    setMonitoringState,
+  } = useFallDetection({
+    onPotentialFallDetected: (score, windowInfo) => {
+      triggerConfirmation(score, windowInfo);
+    },
+  });
+
+  const ingestPoseFrameRef = useRef(ingestPoseFrame);
+  ingestPoseFrameRef.current = ingestPoseFrame;
 
   // Ref to access ingestInferenceResult without re-binding the inference loop
   const ingestRef = useRef(ingestInferenceResult);
@@ -131,8 +183,28 @@ export const FallDetectionDemoPage: React.FC = () => {
           const endTime = performance.now();
           lastInferenceDurationRef.current = endTime - startTime;
 
-          // Milestone B: Ingest result into rolling buffer
+          // Milestone B: Ingest result into manual sequence capture buffer
           ingestRef.current(result, timestampMs);
+
+          // Milestone D: Ingest into continuous real-time fall detection pipeline
+          const frameIndex = liveFrameIndexRef.current++;
+          const serialized = serializePoseResult(result, timestampMs, frameIndex);
+          const livePoseFrame: PoseFrame = serialized || {
+            timestampMs: Math.round(timestampMs),
+            frameIndex,
+            landmarks: Array.from({ length: EXPECTED_LANDMARK_COUNT }, () => ({
+              x: 0,
+              y: 0,
+              z: 0,
+              visibility: 0,
+            })),
+            quality: {
+              poseDetected: false,
+              validLandmarkCount: 0,
+              expectedLandmarkCount: EXPECTED_LANDMARK_COUNT,
+            },
+          };
+          ingestPoseFrameRef.current(livePoseFrame);
 
           const ctx = canvas.getContext('2d');
           if (ctx) {
@@ -193,7 +265,8 @@ export const FallDetectionDemoPage: React.FC = () => {
       return;
     }
 
-    // 3. Start inference loop
+    // 3. Start monitoring & inference loop
+    startMonitoring();
     isLoopActiveRef.current = true;
     lastFpsTimeRef.current = performance.now();
     frameCountRef.current = 0;
@@ -212,13 +285,14 @@ export const FallDetectionDemoPage: React.FC = () => {
       cancelAnimationFrame(animationFrameIdRef.current);
     }
     animationFrameIdRef.current = requestAnimationFrame(runInferenceLoop);
-  }, [startCamera, initModel, videoRef, runInferenceLoop]);
+  }, [startCamera, initModel, startMonitoring, videoRef, runInferenceLoop]);
 
-  // Master Stop handler: stops camera and stops sequence capture if active
+  // Master Stop handler: stops camera, sequence capture, and fall monitoring
   const handleStop = useCallback(() => {
     stopLoop();
     stopCamera();
     stopCapture();
+    stopMonitoring();
     setPoseStatus('idle');
     setStats({
       fps: 0,
@@ -226,7 +300,7 @@ export const FallDetectionDemoPage: React.FC = () => {
       lastInferenceTimeMs: 0,
     });
     setVideoResolution(null);
-  }, [stopLoop, stopCamera, stopCapture]);
+  }, [stopLoop, stopCamera, stopCapture, stopMonitoring]);
 
   // Retry handler
   const handleRetry = useCallback(async () => {
@@ -245,26 +319,49 @@ export const FallDetectionDemoPage: React.FC = () => {
       stopLoop();
       stopCamera();
       closeLandmarker();
+      stopMonitoring();
     };
-  }, [stopLoop, stopCamera, closeLandmarker]);
+  }, [stopLoop, stopCamera, closeLandmarker, stopMonitoring]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+      {/* Fall Confirmation Modal Dialog */}
+      <FallConfirmationDialog
+        isOpen={isConfirmOpen}
+        secondsRemaining={secondsRemaining}
+        fallScore={activeFallScore}
+        isSubmitting={isConfirmSubmitting}
+        onImOkay={handleImOkay}
+        onNeedHelp={handleNeedHelp}
+      />
+
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-            Milestone B
-          </span>
-          <span className="text-xs text-gray-500">Pose Sequence Capture & Rolling Buffer</span>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
+              Milestone D
+            </span>
+            <span className="text-xs text-gray-500">Real-Time Inference & Confirmation Workflow</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Fall Detection & Safety Monitoring
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Real-time ML fall detection evaluates rolling 2.5-second windows of body landmarks against the trained classifier.
+            Confirmed patterns trigger elderly response confirmation and immediate caregiver alerts.
+          </p>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Fall Detection – Pose Tracking & Sequence Recording
-        </h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Captures live MediaPipe body landmarks into a bounded rolling sequence buffer.
-          Frames are serialized with monotonic timestamps and exported as privacy-safe JSON sequences for offline dataset modeling (Milestone C).
-        </p>
+
+        {onNavigateToHistory && (
+          <button
+            onClick={onNavigateToHistory}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl font-medium text-sm text-gray-700 hover:bg-gray-50 transition shadow-xs"
+          >
+            <History className="w-4 h-4 text-indigo-600" />
+            <span>Incident History</span>
+          </button>
+        )}
       </div>
 
       {/* Main Interactive Stage */}
@@ -285,8 +382,14 @@ export const FallDetectionDemoPage: React.FC = () => {
           </CameraPreview>
         </div>
 
-        {/* Right Column: Status, Controls & Rolling Buffer Panels */}
+        {/* Right Column: Status, Controls & Fall Monitoring Panels */}
         <div className="lg:col-span-5 space-y-6">
+          {/* Milestone D: Real-Time Fall Inference Status Panel */}
+          <FallDetectionStatus
+            state={monitoringState}
+            stats={inferenceStats}
+          />
+
           <PoseStatusPanel
             cameraStatus={cameraStatus}
             modelStatus={modelStatus}
@@ -301,6 +404,7 @@ export const FallDetectionDemoPage: React.FC = () => {
             onRetry={handleRetry}
           />
 
+          {/* Milestone B: Offline Sequence Export Panel */}
           <PoseSequencePanel
             captureState={captureState}
             bufferStats={bufferStats}

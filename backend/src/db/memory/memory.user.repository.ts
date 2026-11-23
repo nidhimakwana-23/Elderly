@@ -50,4 +50,26 @@ export class MemoryUserRepository implements IUserRepository {
     }
     return profiles;
   }
+
+  async findById(id: string): Promise<User | undefined> {
+    return this.store.get(id);
+  }
+
+  async getLinkedCaregiverIds(patientId: string): Promise<string[]> {
+    const ids = new Set<string>();
+    for (const p of this.familyStore.values()) {
+      if (p.linkedToUserId === patientId && p.userId !== patientId) ids.add(p.userId);
+      if (p.userId === patientId && p.linkedToUserId !== patientId) ids.add(p.linkedToUserId);
+    }
+    return Array.from(ids);
+  }
+
+  async getLinkedPatientIds(caregiverId: string): Promise<string[]> {
+    const ids = new Set<string>();
+    for (const p of this.familyStore.values()) {
+      if (p.userId === caregiverId && p.linkedToUserId !== caregiverId) ids.add(p.linkedToUserId);
+      if (p.linkedToUserId === caregiverId && p.userId !== caregiverId) ids.add(p.userId);
+    }
+    return Array.from(ids);
+  }
 }

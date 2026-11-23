@@ -16,6 +16,7 @@ import { AppointmentSchema, CreateAppointmentDtoSchema } from './src/appointment
 import { EmergencyRequestSchema, CreateEmergencyDtoSchema } from './src/emergency/emergency.types';
 import { PrescriptionSchema, CreatePrescriptionDtoSchema } from './src/prescription/prescription.types';
 import { ChatbotIntentRequestSchema, IntentPredictionSchema, ChatbotResponseSchema } from './src/chatbot/chatbot.types';
+import { FallEventSchema, CreateFallEventDtoSchema, FallNotificationSchema } from './src/fall-detection/fall-detection.types';
 
 // ─── DB Connection ────────────────────────────────────────────────────────────
 import { connectDB } from './src/db/mongoose/connection';
@@ -30,6 +31,8 @@ import { MongooseAppointmentRepository } from './src/db/mongoose/mongoose.appoin
 import { MongooseEmergencyRepository } from './src/db/mongoose/mongoose.emergency.repository';
 import { MongoosePrescriptionRepository } from './src/db/mongoose/mongoose.prescription.repository';
 import { MongooseConversationRepository } from './src/db/mongoose/mongoose.conversation.repository';
+import { MongooseFallEventRepository } from './src/db/mongoose/mongoose.fall-event.repository';
+import { MongooseFallNotificationRepository } from './src/db/mongoose/mongoose.fall-notification.repository';
 
 // ─── Services ──────────────────────────────────────────────────────────────────────────
 import { AuthService } from './src/auth/auth.service';
@@ -42,6 +45,7 @@ import { AppointmentService } from './src/appointment/appointment.service';
 import { EmergencyService } from './src/emergency/emergency.service';
 import { PrescriptionService } from './src/prescription/prescription.service';
 import { HealthTrendService } from './src/health-trend/health-trend.service';
+import { FallDetectionService } from './src/fall-detection/fall-detection.service';
 
 // ─── Controllers ──────────────────────────────────────────────────────────────────────────
 import { AuthController } from './src/auth/auth.controller';
@@ -54,6 +58,7 @@ import { AppointmentController } from './src/appointment/appointment.controller'
 import { EmergencyController } from './src/emergency/emergency.controller';
 import { PrescriptionController } from './src/prescription/prescription.controller';
 import { HealthTrendController } from './src/health-trend/health-trend.controller';
+import { FallDetectionController } from './src/fall-detection/fall-detection.controller';
 
 // ─── Routers ──────────────────────────────────────────────────────────────────────────
 import { createAuthRouter } from './src/auth/auth.router';
@@ -66,6 +71,7 @@ import { createAppointmentRouter } from './src/appointment/appointment.router';
 import { createEmergencyRouter } from './src/emergency/emergency.router';
 import { createPrescriptionRouter } from './src/prescription/prescription.router';
 import { createHealthTrendRouter } from './src/health-trend/health-trend.router';
+import { createFallDetectionRouter } from './src/fall-detection/fall-detection.router';
 import { AiService } from './src/ai/ai.service';
 import { AiController } from './src/ai/ai.controller';
 import { createAiRouter } from './src/ai/ai.router';
@@ -79,7 +85,8 @@ const port = process.env['PORT'] ?? 3001;
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3001'] }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ─── Request / Response Logger ───────────────────────────────────────────────
 // Logs: timestamp · method · path · status · latency
@@ -107,6 +114,8 @@ const appointmentRepository = new MongooseAppointmentRepository();
 const emergencyRepository = new MongooseEmergencyRepository();
 const prescriptionRepository = new MongoosePrescriptionRepository();
 const conversationRepository = new MongooseConversationRepository();
+const fallEventRepository = new MongooseFallEventRepository();
+const fallNotificationRepository = new MongooseFallNotificationRepository();
 
 const authService = new AuthService(userRepository);
 const familyService = new FamilyService(userRepository);
@@ -126,6 +135,7 @@ const healthTrendService = new HealthTrendService(
 );
 const aiService = new AiService(healthCheckService, medicineLogsService, medicineService, conversationRepository);
 const chatbotService = new ChatbotService(medicineLogsService, healthCheckService, healthTrendService, medicineService);
+const fallDetectionService = new FallDetectionService(fallEventRepository, fallNotificationRepository, userRepository);
 
 const authController = new AuthController(authService);
 const familyController = new FamilyController(familyService);
@@ -139,6 +149,7 @@ const prescriptionController = new PrescriptionController(prescriptionService);
 const healthTrendController = new HealthTrendController(healthTrendService);
 const aiController = new AiController(aiService);
 const chatbotController = new ChatbotController(chatbotService, userRepository);
+const fallDetectionController = new FallDetectionController(fallDetectionService);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/api', (_req: Request, res: Response) => {
@@ -158,6 +169,7 @@ app.use('/api/prescriptions', createPrescriptionRouter(prescriptionController));
 app.use('/api/health-trend', createHealthTrendRouter(healthTrendController));
 app.use('/api/ai', createAiRouter(aiController));
 app.use('/api/chatbot', createChatbotRouter(chatbotController, userRepository));
+app.use('/api/fall-detection', createFallDetectionRouter(fallDetectionController));
 
 // ─── OpenAPI / Scalar ─────────────────────────────────────────────────────────
 const swaggerOptions = {
@@ -207,6 +219,9 @@ const swaggerOptions = {
         ChatbotIntentRequest: z.toJSONSchema(ChatbotIntentRequestSchema, { target: 'openapi-3.0' }),
         IntentPrediction: z.toJSONSchema(IntentPredictionSchema, { target: 'openapi-3.0' }),
         ChatbotResponse: z.toJSONSchema(ChatbotResponseSchema, { target: 'openapi-3.0' }),
+        FallEvent: z.toJSONSchema(FallEventSchema, { target: 'openapi-3.0' }),
+        CreateFallEventDto: z.toJSONSchema(CreateFallEventDtoSchema, { target: 'openapi-3.0' }),
+        FallNotification: z.toJSONSchema(FallNotificationSchema, { target: 'openapi-3.0' }),
       },
     },
   },

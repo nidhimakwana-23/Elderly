@@ -62,4 +62,41 @@ export class MongooseUserRepository implements IUserRepository {
       };
     });
   }
+
+  async findById(id: string): Promise<User | undefined> {
+    const doc = await UserModel.findOne({ id })
+      .select('-_id -__v')
+      .lean<User>();
+    return doc ?? undefined;
+  }
+
+  async getLinkedCaregiverIds(patientId: string): Promise<string[]> {
+    const profiles = await FamilyProfileModel.find({
+      $or: [{ linkedToUserId: patientId }, { userId: patientId }],
+    })
+      .select('userId linkedToUserId -_id')
+      .lean<{ userId: string; linkedToUserId: string }[]>();
+
+    const ids = new Set<string>();
+    for (const p of profiles) {
+      if (p.linkedToUserId === patientId && p.userId !== patientId) ids.add(p.userId);
+      if (p.userId === patientId && p.linkedToUserId !== patientId) ids.add(p.linkedToUserId);
+    }
+    return Array.from(ids);
+  }
+
+  async getLinkedPatientIds(caregiverId: string): Promise<string[]> {
+    const profiles = await FamilyProfileModel.find({
+      $or: [{ userId: caregiverId }, { linkedToUserId: caregiverId }],
+    })
+      .select('userId linkedToUserId -_id')
+      .lean<{ userId: string; linkedToUserId: string }[]>();
+
+    const ids = new Set<string>();
+    for (const p of profiles) {
+      if (p.userId === caregiverId && p.linkedToUserId !== caregiverId) ids.add(p.linkedToUserId);
+      if (p.linkedToUserId === caregiverId && p.userId !== caregiverId) ids.add(p.userId);
+    }
+    return Array.from(ids);
+  }
 }
